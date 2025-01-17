@@ -5,12 +5,14 @@ mod audio;
 mod loading;
 mod menu;
 mod player;
+mod tilemap;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
+use crate::tilemap::TilemapPlugin;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -35,13 +37,16 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.init_state::<GameState>().add_plugins((
-            LoadingPlugin,
-            MenuPlugin,
-            ActionsPlugin,
-            InternalAudioPlugin,
-            PlayerPlugin,
-        ));
+        app.init_state::<GameState>()
+            .add_plugins((
+                LoadingPlugin,
+                MenuPlugin,
+                ActionsPlugin,
+                InternalAudioPlugin,
+                PlayerPlugin,
+                TilemapPlugin,
+            ))
+            .enable_state_scoped_entities::<GameState>();
 
         #[cfg(debug_assertions)]
         {

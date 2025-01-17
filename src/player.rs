@@ -1,7 +1,9 @@
+use bevy::math::vec3;
+use bevy::prelude::*;
+
 use crate::actions::Actions;
 use crate::loading::TextureAssets;
 use crate::GameState;
-use bevy::prelude::*;
 
 pub struct PlayerPlugin;
 
@@ -19,8 +21,8 @@ impl Plugin for PlayerPlugin {
 
 fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn((
-        Sprite::from_image(textures.bevy.clone()),
-        Transform::from_translation(Vec3::new(0., 0., 1.)),
+        Sprite::from_image(textures.player_sword.clone()),
+        Transform::from_translation(Vec3::new(0., 0., 2.)).with_scale(vec3(4.0, 4.0, 1.0)),
         Player,
     ));
 }
