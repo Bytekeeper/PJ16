@@ -2,6 +2,7 @@
 
 mod actions;
 mod audio;
+mod enemies;
 mod loading;
 mod menu;
 mod player;
@@ -9,10 +10,14 @@ mod tilemap;
 
 use crate::actions::ActionsPlugin;
 use crate::audio::InternalAudioPlugin;
+use crate::enemies::EnemiesPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
 use crate::tilemap::TilemapPlugin;
+
+use avian2d::{prelude::Gravity, PhysicsPlugins};
+use bevy_enoki::EnokiPlugin;
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -45,8 +50,12 @@ impl Plugin for GamePlugin {
                 InternalAudioPlugin,
                 PlayerPlugin,
                 TilemapPlugin,
+                EnemiesPlugin,
+                PhysicsPlugins::default(),
+                EnokiPlugin,
             ))
-            .enable_state_scoped_entities::<GameState>();
+            .enable_state_scoped_entities::<GameState>()
+            .insert_resource(Gravity(Vec2::ZERO));
 
         #[cfg(debug_assertions)]
         {

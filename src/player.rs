@@ -1,13 +1,19 @@
+use avian2d::prelude::*;
 use bevy::prelude::*;
+use bevy::utils::Duration;
+use bevy_enoki::ParticleSpawner;
+use bevy_kira_audio::prelude::*;
 
 use crate::actions::Actions;
-use crate::loading::TextureAssets;
+use crate::loading::{AudioAssets, TextureAssets};
 use crate::GameState;
 
 pub struct PlayerPlugin;
 
-#[derive(Component)]
-pub struct Player;
+#[derive(Component, Default)]
+pub struct Player {
+    action_cooldown: Timer,
+}
 
 #[derive(Component)]
 pub struct DirectionArrow;
@@ -19,7 +25,7 @@ impl Plugin for PlayerPlugin {
         app.add_systems(OnEnter(GameState::Playing), spawn_player)
             .add_systems(
                 Update,
-                update_direction_arrow.run_if(in_state(GameState::Playing)),
+                (update_direction_arrow, player_action).run_if(in_state(GameState::Playing)),
             );
     }
 }
@@ -28,26 +34,41 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn((
         Sprite::from_image(textures.player_sword.clone()),
         Transform::from_translation(Vec3::new(0., 0., 2.)),
-        Player,
+        RigidBody::Dynamic,
+        Collider::circle(16.0),
+        Player::default(),
+        StateScoped(GameState::Playing),
     ));
 }
 
-fn move_player(
+fn player_action(
     time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player_query: Query<(&Transform, &mut Player)>,
+    audio: Res<Audio>,
+    audio_assets: Res<AudioAssets>,
+    mut commands: Commands,
 ) {
-    if actions.player_direction.is_none() {
-        return;
-    }
-    let speed = 150.;
-    let movement = Vec3::new(
-        actions.player_direction.unwrap().x * speed * time.delta_secs(),
-        actions.player_direction.unwrap().y * speed * time.delta_secs(),
-        0.,
-    );
-    for mut player_transform in &mut player_query {
-        player_transform.translation += movement;
+    for (player_transform, mut player) in player_query.iter_mut() {
+        let timer = &mut player.action_cooldown;
+        timer.tick(time.delta());
+        if actions.trigger_action {
+            if timer.finished() {
+                timer.set_duration(Duration::from_secs(1));
+                timer.reset();
+                let mut transform = player_transform.clone();
+                transform.translation += Vec3::Z;
+                commands.spawn((
+                    // the main component.
+                    // holds a material handle.
+                    // defaults to a simple white color quad.
+                    // has required components
+                    ParticleSpawner::default(),
+                    transform,
+                ));
+                audio.play(audio_assets.woosh.clone()).with_volume(0.3);
+            }
+        }
     }
 }
 

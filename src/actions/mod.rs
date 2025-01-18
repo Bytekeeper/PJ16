@@ -42,6 +42,8 @@ pub fn set_movement_actions(
             - get_movement(GameControl::Down, &keyboard_input),
     );
 
+    actions.trigger_action = keyboard_input.pressed(KeyCode::Space);
+
     if let Some(touch_position) = touch_input.first_pressed_position() {
         let (camera, camera_transform) = camera.single();
         if let Ok(touch_position) = camera.viewport_to_world_2d(camera_transform, touch_position) {
