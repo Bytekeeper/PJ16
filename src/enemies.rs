@@ -10,4 +10,4 @@ impl Plugin for EnemiesPlugin {
     }
 }
 
-fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {}
+fn spawn_enemies(mut _commands: Commands, _textures: Res<TextureAssets>) {}

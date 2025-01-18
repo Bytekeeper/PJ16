@@ -52,22 +52,20 @@ fn player_action(
     for (player_transform, mut player) in player_query.iter_mut() {
         let timer = &mut player.action_cooldown;
         timer.tick(time.delta());
-        if actions.trigger_action {
-            if timer.finished() {
-                timer.set_duration(Duration::from_secs(1));
-                timer.reset();
-                let mut transform = player_transform.clone();
-                transform.translation += Vec3::Z;
-                commands.spawn((
-                    // the main component.
-                    // holds a material handle.
-                    // defaults to a simple white color quad.
-                    // has required components
-                    ParticleSpawner::default(),
-                    transform,
-                ));
-                audio.play(audio_assets.woosh.clone()).with_volume(0.3);
-            }
+        if actions.trigger_action && timer.finished() {
+            timer.set_duration(Duration::from_secs(1));
+            timer.reset();
+            let mut transform = *player_transform;
+            transform.translation += Vec3::Z;
+            commands.spawn((
+                // the main component.
+                // holds a material handle.
+                // defaults to a simple white color quad.
+                // has required components
+                ParticleSpawner::default(),
+                transform,
+            ));
+            audio.play(audio_assets.woosh.clone()).with_volume(0.3);
         }
     }
 }
@@ -87,15 +85,15 @@ fn update_direction_arrow(
         return;
     };
 
-    'outer: for player_transform in player_query.iter() {
+    for player_transform in player_query.iter() {
         let direction = player_direction.normalize().extend(0.0);
         let as_quat = Quat::from_rotation_arc(Vec3::Y, direction);
-        let mut target_transform = player_transform.clone().with_rotation(as_quat);
+        let mut target_transform = player_transform.with_rotation(as_quat);
         target_transform.translation += direction * 20.0;
 
-        for (_, mut arrow_transform) in arrow_query.iter_mut() {
+        if let Some((_, mut arrow_transform)) = arrow_query.iter_mut().next() {
             *arrow_transform = target_transform;
-            continue 'outer;
+            continue;
         }
         // No existing arrow
         commands.spawn((
