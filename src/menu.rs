@@ -33,7 +33,9 @@ struct Menu;
 
 fn setup_menu(mut commands: Commands) {
     info!("menu");
-    commands.spawn((Camera2d, Msaa::Off));
+    let mut projection = OrthographicProjection::default_2d();
+    projection.scale = 1.0 / 4.0;
+    commands.spawn((Camera2d, Msaa::Off, projection));
     commands
         .spawn((
             Node {

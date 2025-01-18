@@ -24,7 +24,8 @@ impl Plugin for ActionsPlugin {
 
 #[derive(Default, Resource)]
 pub struct Actions {
-    pub player_movement: Option<Vec2>,
+    pub player_direction: Option<Vec2>,
+    pub trigger_action: bool,
 }
 
 pub fn set_movement_actions(
@@ -34,7 +35,7 @@ pub fn set_movement_actions(
     player: Query<&Transform, With<Player>>,
     camera: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
 ) {
-    let mut player_movement = Vec2::new(
+    let mut player_direction = Vec2::new(
         get_movement(GameControl::Right, &keyboard_input)
             - get_movement(GameControl::Left, &keyboard_input),
         get_movement(GameControl::Up, &keyboard_input)
@@ -46,14 +47,14 @@ pub fn set_movement_actions(
         if let Ok(touch_position) = camera.viewport_to_world_2d(camera_transform, touch_position) {
             let diff = touch_position - player.single().translation.xy();
             if diff.length() > FOLLOW_EPSILON {
-                player_movement = diff.normalize();
+                player_direction = diff.normalize();
             }
         }
     }
 
-    if player_movement != Vec2::ZERO {
-        actions.player_movement = Some(player_movement.normalize());
+    if player_direction != Vec2::ZERO {
+        actions.player_direction = Some(player_direction.normalize());
     } else {
-        actions.player_movement = None;
+        actions.player_direction = None;
     }
 }
