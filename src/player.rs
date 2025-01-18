@@ -1,11 +1,14 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 use bevy::utils::Duration;
-use bevy_enoki::ParticleSpawner;
+use bevy_enoki::{
+    prelude::{OneShot, ParticleEffectHandle},
+    ParticleSpawner,
+};
 use bevy_kira_audio::prelude::*;
 
 use crate::actions::Actions;
-use crate::loading::{AudioAssets, TextureAssets};
+use crate::loading::{AudioAssets, EffectAssets, TextureAssets};
 use crate::GameState;
 
 pub struct PlayerPlugin;
@@ -47,6 +50,7 @@ fn player_action(
     mut player_query: Query<(&Transform, &mut Player)>,
     audio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
+    effect_assets: Res<EffectAssets>,
     mut commands: Commands,
 ) {
     for (player_transform, mut player) in player_query.iter_mut() {
@@ -63,7 +67,9 @@ fn player_action(
                 // defaults to a simple white color quad.
                 // has required components
                 ParticleSpawner::default(),
+                ParticleEffectHandle(effect_assets.sword_slash.clone()),
                 transform,
+                OneShot::Despawn,
             ));
             audio.play(audio_assets.woosh.clone()).with_volume(0.3);
         }
