@@ -39,6 +39,7 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
         Transform::from_translation(Vec3::new(0., 0., 2.)),
         RigidBody::Dynamic,
         Collider::circle(16.0),
+        LinearDamping(10.0),
         Player::default(),
         StateScoped(GameState::Playing),
     ));
@@ -47,13 +48,13 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
 fn player_action(
     time: Res<Time>,
     actions: Res<Actions>,
-    mut player_query: Query<(&Transform, &mut Player)>,
+    mut player_query: Query<(Entity, &Transform, &mut Player)>,
     audio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
     effect_assets: Res<EffectAssets>,
     mut commands: Commands,
 ) {
-    for (player_transform, mut player) in player_query.iter_mut() {
+    for (player_entity, player_transform, mut player) in player_query.iter_mut() {
         let timer = &mut player.action_cooldown;
         timer.tick(time.delta());
         if actions.trigger_action && timer.finished() {
@@ -62,16 +63,19 @@ fn player_action(
             let mut transform = *player_transform;
             transform.translation += Vec3::Z;
             commands.spawn((
-                // the main component.
-                // holds a material handle.
-                // defaults to a simple white color quad.
-                // has required components
                 ParticleSpawner::default(),
                 ParticleEffectHandle(effect_assets.sword_slash.clone()),
                 transform,
                 OneShot::Despawn,
             ));
             audio.play(audio_assets.woosh.clone()).with_volume(0.3);
+
+            if let Some(player_direction) = actions.player_direction {
+                let player_direction = player_direction.normalize_or_zero() * 200000.0;
+                commands
+                    .entity(player_entity)
+                    .insert(ExternalImpulse::new(player_direction));
+            }
         }
     }
 }
