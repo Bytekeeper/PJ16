@@ -1,6 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 mod actions;
+mod animation;
 mod audio;
 mod enemies;
 mod loading;
@@ -9,6 +10,7 @@ mod player;
 mod tilemap;
 
 use crate::actions::ActionsPlugin;
+use crate::animation::AnimationPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::enemies::EnemiesPlugin;
 use crate::loading::LoadingPlugin;
@@ -53,6 +55,7 @@ impl Plugin for GamePlugin {
                 EnemiesPlugin,
                 PhysicsPlugins::default(),
                 EnokiPlugin,
+                AnimationPlugin,
             ))
             .enable_state_scoped_entities::<GameState>()
             .insert_resource(Gravity(Vec2::ZERO));

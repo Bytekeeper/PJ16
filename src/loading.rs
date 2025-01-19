@@ -1,8 +1,10 @@
-use crate::GameState;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_enoki::Particle2dEffect;
 use bevy_kira_audio::AudioSource;
+
+use crate::animation::{Animation, AnimationIndices};
+use crate::GameState;
 
 pub struct LoadingPlugin;
 
@@ -16,7 +18,8 @@ impl Plugin for LoadingPlugin {
                 .continue_to_state(GameState::Menu)
                 .load_collection::<AudioAssets>()
                 .load_collection::<TextureAssets>()
-                .load_collection::<EffectAssets>(),
+                .load_collection::<EffectAssets>()
+                .init_resource::<Animations>(),
         );
     }
 }
@@ -38,10 +41,42 @@ pub struct TextureAssets {
     pub player_sword: Handle<Image>,
     #[asset(path = "textures/placeholder/spritesheet.png")]
     pub tiles: Handle<Image>,
+    #[asset(path = "textures/Melee_Enemy_1.png")]
+    pub enemy_1: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
 pub struct EffectAssets {
     #[asset(path = "effects/sword-slash.ron")]
     pub sword_slash: Handle<Particle2dEffect>,
+}
+
+#[derive(Resource)]
+pub struct Animations {
+    pub enemy_1_walk: Animation,
+}
+
+impl FromWorld for Animations {
+    fn from_world(world: &mut World) -> Self {
+        let mut texture_atlas_layouts = world
+            .get_resource_mut::<Assets<TextureAtlasLayout>>()
+            .expect("Missing TextureAtlasLayout assets");
+        let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 13, 1, None, None);
+        let enemy_1_walking_atlas_layout = texture_atlas_layouts.add(layout);
+        let enemy_1_animation_indices = AnimationIndices { first: 0, last: 12 };
+        Self {
+            enemy_1_walk: Animation {
+                image: world
+                    .get_resource::<TextureAssets>()
+                    .expect("Textures not loaded")
+                    .enemy_1
+                    .clone(),
+                atlas: TextureAtlas {
+                    layout: enemy_1_walking_atlas_layout,
+                    index: enemy_1_animation_indices.first,
+                },
+                indices: enemy_1_animation_indices,
+            },
+        }
+    }
 }
