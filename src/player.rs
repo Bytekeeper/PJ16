@@ -1,7 +1,7 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
-use crate::actions::Actions;
+use crate::actions::{Actions, Health};
 use crate::loading::TextureAssets;
 use crate::GameState;
 
@@ -34,6 +34,7 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
         LockedAxes::ROTATION_LOCKED,
         LinearDamping(10.0),
         Player,
+        Health { owner: 0 },
         Actions::default(),
         StateScoped(GameState::Playing),
     ));

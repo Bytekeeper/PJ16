@@ -1,4 +1,4 @@
-use avian2d::prelude::{ExternalImpulse, LinearDamping, RigidBody};
+use avian2d::prelude::*;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
 use bevy::utils::Duration;
@@ -25,7 +25,12 @@ impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (set_movement_actions, character_triggers, character_movement)
+            (
+                set_movement_actions,
+                character_triggers,
+                character_movement,
+                hit_detection,
+            )
                 .chain()
                 .run_if(in_state(GameState::Playing)),
         );
@@ -44,6 +49,17 @@ pub struct Actions {
 #[require(RigidBody, LinearDamping(|| LinearDamping(10.0)))]
 pub enum MoveMotion {
     Sliding { speed: f32 },
+    Bouncing { speed: f32, timer: Timer },
+}
+
+#[derive(Component)]
+pub struct Health {
+    pub owner: u32,
+}
+
+#[derive(Component)]
+pub struct Damage {
+    pub target_owner: u32,
 }
 
 pub fn set_movement_actions(
@@ -83,18 +99,32 @@ pub fn set_movement_actions(
 
 fn character_movement(
     time: Res<Time>,
-    mut character_query: Query<(Entity, &Actions, &MoveMotion)>,
+    mut character_query: Query<(Entity, &Actions, &mut MoveMotion)>,
     mut commands: Commands,
 ) {
-    for (character_entity, actions, move_motion) in character_query.iter_mut() {
+    for (character_entity, actions, mut move_motion) in character_query.iter_mut() {
         if let Some(move_direction) = actions.move_direction {
-            match move_motion {
+            match *move_motion {
                 MoveMotion::Sliding { speed } => {
                     commands
                         .entity(character_entity)
                         .insert(ExternalImpulse::new(
-                            (move_direction * time.delta_secs()).clamp_length(0.0, *speed) * 200.0,
+                            (move_direction * time.delta_secs()).clamp_length(0.0, speed) * 200.0,
                         ));
+                }
+                MoveMotion::Bouncing {
+                    speed,
+                    ref mut timer,
+                } => {
+                    timer.tick(time.delta());
+                    if timer.just_finished() {
+                        commands
+                            .entity(character_entity)
+                            .insert(ExternalImpulse::new(
+                                (move_direction * time.delta_secs()).clamp_length(0.0, speed)
+                                    * 2000.0,
+                            ));
+                    }
                 }
             }
         }
@@ -103,13 +133,15 @@ fn character_movement(
 
 fn character_triggers(
     time: Res<Time>,
-    mut character_query: Query<(Entity, &Transform, &mut Actions)>,
+    mut character_query: Query<(Entity, &Transform, &mut Actions, &Health)>,
     audio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
     effect_assets: Res<EffectAssets>,
     mut commands: Commands,
 ) {
-    for (character_entity, character_transform, mut actions) in character_query.iter_mut() {
+    for (character_entity, character_transform, mut actions, Health { owner }) in
+        character_query.iter_mut()
+    {
         let actions = &mut *actions;
         let timer = &mut actions.trigger_cooldown;
         timer.tick(time.delta());
@@ -123,6 +155,11 @@ fn character_triggers(
                 ParticleEffectHandle(effect_assets.sword_slash.clone()),
                 transform,
                 OneShot::Despawn,
+                Collider::circle(15.0),
+                Damage {
+                    target_owner: 1 - *owner,
+                },
+                Sensor,
             ));
             audio.play(audio_assets.woosh.clone()).with_volume(0.3);
 
@@ -131,6 +168,31 @@ fn character_triggers(
                 commands
                     .entity(character_entity)
                     .insert(ExternalImpulse::new(character_direction));
+            }
+        }
+    }
+}
+
+fn hit_detection(
+    mut collision_event_reader: EventReader<Collision>,
+    health_query: Query<&Health>,
+    damage_query: Query<&Damage>,
+    mut commands: Commands,
+) {
+    for Collision(contacts) in collision_event_reader.read() {
+        let Contacts {
+            mut entity1,
+            mut entity2,
+            ..
+        } = contacts;
+        if health_query.contains(entity1) {
+            std::mem::swap(&mut entity1, &mut entity2);
+        }
+        if let (Ok(Damage { target_owner }), Ok(Health { owner })) =
+            (damage_query.get(entity1), health_query.get(entity2))
+        {
+            if target_owner == owner {
+                commands.entity(entity2).despawn();
             }
         }
     }

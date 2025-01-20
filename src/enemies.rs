@@ -1,4 +1,4 @@
-use crate::actions::{Actions, MoveMotion};
+use crate::actions::{Actions, Health, MoveMotion};
 use crate::animation::*;
 use crate::loading::Animations;
 use crate::player::Player;
@@ -30,8 +30,28 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
         animations.enemy_1_walk.indices,
         Ai,
         Collider::circle(5.0),
+        Health { owner: 1 },
         LockedAxes::ROTATION_LOCKED,
         MoveMotion::Sliding { speed: 10.0 },
+        Actions::default(),
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        StateScoped(GameState::Playing),
+    ));
+    commands.spawn((
+        Sprite::from_atlas_image(
+            animations.enemy_1_walk.image.clone(),
+            animations.enemy_1_walk.atlas.clone(),
+        ),
+        Transform::from_translation(vec3(-100.0, 100.0, 5.0)),
+        animations.enemy_1_walk.indices,
+        Ai,
+        Collider::circle(5.0),
+        Health { owner: 1 },
+        LockedAxes::ROTATION_LOCKED,
+        MoveMotion::Bouncing {
+            speed: 10.0,
+            timer: Timer::from_seconds(0.6, TimerMode::Repeating),
+        },
         Actions::default(),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         StateScoped(GameState::Playing),
