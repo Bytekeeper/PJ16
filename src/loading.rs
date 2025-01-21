@@ -1,3 +1,4 @@
+use crate::tiled::TiledMap;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_enoki::Particle2dEffect;
@@ -19,6 +20,7 @@ impl Plugin for LoadingPlugin {
                 .load_collection::<AudioAssets>()
                 .load_collection::<TextureAssets>()
                 .load_collection::<EffectAssets>()
+                .load_collection::<TileMapAssets>()
                 .init_resource::<Animations>(),
         );
     }
@@ -39,10 +41,26 @@ pub struct TextureAssets {
     pub arrow: Handle<Image>,
     #[asset(path = "textures/player_sword_1.png")]
     pub player_sword: Handle<Image>,
+    #[asset(path = "textures/Player_Mace_1.png")]
+    pub player_mace: Handle<Image>,
+    #[asset(path = "textures/Player_Spear_1.png")]
+    pub player_spear: Handle<Image>,
+    #[asset(path = "textures/player_Bow.png")]
+    pub player_bow: Handle<Image>,
     #[asset(path = "textures/placeholder/spritesheet.png")]
     pub tiles: Handle<Image>,
     #[asset(path = "textures/Melee_Enemy_1.png")]
     pub enemy_1: Handle<Image>,
+    #[asset(path = "textures/Melee_Enemy_2.png")]
+    pub enemy_2: Handle<Image>,
+    #[asset(path = "textures/Melee_Enemy_3.png")]
+    pub enemy_3: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct TileMapAssets {
+    #[asset(path = "level1.tmx")]
+    pub level_1: Handle<TiledMap>,
 }
 
 #[derive(AssetCollection, Resource)]

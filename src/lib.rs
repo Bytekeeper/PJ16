@@ -3,19 +3,23 @@
 mod actions;
 mod animation;
 mod audio;
+mod camera;
 mod enemies;
 mod loading;
 mod menu;
 mod player;
+mod tiled;
 mod tilemap;
 
 use crate::actions::ActionsPlugin;
 use crate::animation::AnimationPlugin;
 use crate::audio::InternalAudioPlugin;
+use crate::camera::CameraPlugin;
 use crate::enemies::EnemiesPlugin;
 use crate::loading::LoadingPlugin;
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
+use crate::tiled::TiledMapPlugin;
 use crate::tilemap::TilemapPlugin;
 
 use avian2d::{prelude::Gravity, PhysicsPlugins};
@@ -52,10 +56,12 @@ impl Plugin for GamePlugin {
                 InternalAudioPlugin,
                 PlayerPlugin,
                 TilemapPlugin,
+                TiledMapPlugin,
                 EnemiesPlugin,
                 PhysicsPlugins::default(),
                 EnokiPlugin,
                 AnimationPlugin,
+                CameraPlugin,
             ))
             .enable_state_scoped_entities::<GameState>()
             .insert_resource(Gravity(Vec2::ZERO));

@@ -67,7 +67,10 @@ fn ai_think(
         return;
     };
     for (mut ai, ai_transform) in ai_query.iter_mut() {
-        ai.move_direction =
-            Some((player_transform.translation - ai_transform.translation).truncate());
+        ai.move_direction = Some(
+            (player_transform.translation - ai_transform.translation)
+                .truncate()
+                .clamp_length_min(100.0),
+        );
     }
 }
