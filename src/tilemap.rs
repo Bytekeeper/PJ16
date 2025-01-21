@@ -1,9 +1,7 @@
-use avian2d::prelude::*;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::TilemapRenderSettings;
 
 use crate::loading::TileMapAssets;
-use crate::physics::CollisionLayer;
 use crate::tiled::*;
 use crate::GameState;
 

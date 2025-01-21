@@ -78,6 +78,7 @@ fn update_direction_arrow(
     let as_quat = Quat::from_rotation_arc(Vec3::Y, direction);
     let mut target_transform = player_transform.with_rotation(as_quat);
     target_transform.translation += direction * 20.0;
+    target_transform.scale = Vec3::splat(1.0 + actions.trigger_charge.fraction());
 
     if let Some((_, mut arrow_transform)) = arrow_query.iter_mut().next() {
         *arrow_transform = target_transform;

@@ -43,6 +43,16 @@ pub struct Actions {
     pub trigger_direction: Option<Vec2>,
     pub trigger_action: bool,
     pub trigger_cooldown: Timer,
+    pub trigger_charge: Charge,
+}
+
+#[derive(DerefMut, Deref)]
+pub struct Charge(Timer);
+
+impl Default for Charge {
+    fn default() -> Self {
+        Self(Timer::from_seconds(2.0, TimerMode::Once))
+    }
 }
 
 #[derive(Component)]
@@ -67,6 +77,7 @@ pub fn set_movement_actions(
     touch_input: Res<Touches>,
     mut player: Query<(&mut Actions, &Transform), With<Player>>,
     camera: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    time: Res<Time>,
 ) {
     let Ok((mut actions, player_transform)) = player.get_single_mut() else {
         return;
@@ -78,7 +89,14 @@ pub fn set_movement_actions(
             - get_movement(GameControl::Down, &keyboard_input),
     );
 
-    actions.trigger_action = keyboard_input.pressed(KeyCode::Space);
+    if keyboard_input.pressed(KeyCode::Space) && actions.trigger_cooldown.finished() {
+        actions.trigger_charge.tick(time.delta());
+        actions.trigger_action = false;
+    } else {
+        actions.trigger_action = !actions.trigger_charge.elapsed().is_zero();
+        actions.trigger_charge.reset();
+    }
+    //actions.trigger_action = keyboard_input.pressed(KeyCode::Space);
 
     if let Some(touch_position) = touch_input.first_pressed_position() {
         let (camera, camera_transform) = camera.single();
