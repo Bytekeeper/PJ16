@@ -1,8 +1,10 @@
 use avian2d::prelude::*;
+use bevy::math::vec3;
 use bevy::prelude::*;
 
 use crate::actions::{Actions, Health};
-use crate::loading::TextureAssets;
+use crate::loading::{Fonts, TextureAssets};
+use crate::ui::CooldownDisplay;
 use crate::GameState;
 
 pub struct PlayerPlugin;
@@ -26,18 +28,33 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>) {
-    commands.spawn((
-        Sprite::from_image(textures.player_sword.clone()),
-        Transform::from_translation(Vec3::new(0., 0., 2.)),
-        Collider::circle(5.0),
-        LockedAxes::ROTATION_LOCKED,
-        LinearDamping(10.0),
-        Player,
-        Health { owner: 0 },
-        Actions::default(),
-        StateScoped(GameState::Playing),
-    ));
+fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>, fonts: Res<Fonts>) {
+    commands
+        .spawn((
+            Sprite::from_image(textures.player_sword.clone()),
+            Transform::from_translation(Vec3::new(0., 0., 2.)),
+            Collider::circle(5.0),
+            LockedAxes::ROTATION_LOCKED,
+            LinearDamping(10.0),
+            Player,
+            Health { owner: 0 },
+            Actions::default(),
+            StateScoped(GameState::Playing),
+        ))
+        .with_children(|commands| {
+            commands.spawn((
+                CooldownDisplay(commands.parent_entity()),
+                Text2d::new("1"),
+                // Workaround to make Bevy not blur the font
+                Transform::from_translation(vec3(12.0, -10.0, 1.0))
+                    .with_scale(Vec3::splat(1.0 / 4.0)),
+                TextFont {
+                    font: fonts.font.clone(),
+                    font_size: 64.0,
+                    ..default()
+                },
+            ));
+        });
 }
 
 fn update_direction_arrow(

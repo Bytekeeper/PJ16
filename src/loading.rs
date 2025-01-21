@@ -21,6 +21,7 @@ impl Plugin for LoadingPlugin {
                 .load_collection::<TextureAssets>()
                 .load_collection::<EffectAssets>()
                 .load_collection::<TileMapAssets>()
+                .load_collection::<Fonts>()
                 .init_resource::<Animations>(),
         );
     }
@@ -72,6 +73,12 @@ pub struct EffectAssets {
 #[derive(Resource)]
 pub struct Animations {
     pub enemy_1_walk: Animation,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct Fonts {
+    #[asset(path = "Pixelated Elegance.ttf")]
+    pub font: Handle<Font>,
 }
 
 impl FromWorld for Animations {

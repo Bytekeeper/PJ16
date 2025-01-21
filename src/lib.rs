@@ -7,9 +7,11 @@ mod camera;
 mod enemies;
 mod loading;
 mod menu;
+mod physics;
 mod player;
 mod tiled;
 mod tilemap;
+mod ui;
 
 use crate::actions::ActionsPlugin;
 use crate::animation::AnimationPlugin;
@@ -21,6 +23,7 @@ use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
 use crate::tiled::TiledMapPlugin;
 use crate::tilemap::TilemapPlugin;
+use crate::ui::UiPlugin;
 
 use avian2d::{prelude::Gravity, PhysicsPlugins};
 use bevy_enoki::EnokiPlugin;
@@ -62,6 +65,7 @@ impl Plugin for GamePlugin {
                 EnokiPlugin,
                 AnimationPlugin,
                 CameraPlugin,
+                UiPlugin,
             ))
             .enable_state_scoped_entities::<GameState>()
             .insert_resource(Gravity(Vec2::ZERO));
