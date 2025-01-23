@@ -81,8 +81,8 @@ fn update_health_display(
                             animations.beating_heart.indices,
                             AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
                             Node {
-                                width: Val::Px(64.0),
-                                height: Val::Px(64.0),
+                                width: Val::Px(38.0),
+                                height: Val::Px(38.0),
                                 ..default()
                             },
                         ));
@@ -90,8 +90,8 @@ fn update_health_display(
                         parent.spawn((
                             ImageNode::new(textures.broken_heart.clone()),
                             Node {
-                                width: Val::Px(64.0),
-                                height: Val::Px(64.0),
+                                width: Val::Px(38.0),
+                                height: Val::Px(38.0),
                                 ..default()
                             },
                         ));
