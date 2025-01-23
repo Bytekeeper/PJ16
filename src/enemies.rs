@@ -30,7 +30,11 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
         animations.enemy_1_walk.indices,
         Ai,
         Collider::circle(5.0),
-        Health { owner: 1 },
+        Health {
+            owner: 1,
+            max_health: 3,
+            health: 3,
+        },
         LockedAxes::ROTATION_LOCKED,
         MoveMotion::Sliding { speed: 10.0 },
         Actions::default(),
@@ -46,7 +50,11 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
         animations.enemy_1_walk.indices,
         Ai,
         Collider::circle(5.0),
-        Health { owner: 1 },
+        Health {
+            owner: 1,
+            max_health: 3,
+            health: 3,
+        },
         LockedAxes::ROTATION_LOCKED,
         MoveMotion::Bouncing {
             speed: 10.0,

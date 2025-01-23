@@ -37,7 +37,11 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>, fonts: Res
             LockedAxes::ROTATION_LOCKED,
             LinearDamping(10.0),
             Player,
-            Health { owner: 0 },
+            Health {
+                owner: 0,
+                max_health: 5,
+                health: 3,
+            },
             Actions::default(),
             StateScoped(GameState::Playing),
         ))

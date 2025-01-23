@@ -56,6 +56,10 @@ pub struct TextureAssets {
     pub enemy_2: Handle<Image>,
     #[asset(path = "textures/Melee_Enemy_3.png")]
     pub enemy_3: Handle<Image>,
+    #[asset(path = "textures/Player_Life_Anim.png")]
+    pub beating_heart: Handle<Image>,
+    #[asset(path = "textures/Player_Life_Depleted.png")]
+    pub broken_heart: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -73,6 +77,7 @@ pub struct EffectAssets {
 #[derive(Resource)]
 pub struct Animations {
     pub enemy_1_walk: Animation,
+    pub beating_heart: Animation,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -86,21 +91,39 @@ impl FromWorld for Animations {
         let mut texture_atlas_layouts = world
             .get_resource_mut::<Assets<TextureAtlasLayout>>()
             .expect("Missing TextureAtlasLayout assets");
-        let layout = TextureAtlasLayout::from_grid(UVec2::splat(16), 13, 1, None, None);
-        let enemy_1_walking_atlas_layout = texture_atlas_layouts.add(layout);
-        let enemy_1_animation_indices = AnimationIndices { first: 0, last: 12 };
+        let enemy_1_walk_atlas = TextureAtlas {
+            layout: texture_atlas_layouts.add(TextureAtlasLayout::from_grid(
+                UVec2::splat(16),
+                13,
+                1,
+                None,
+                None,
+            )),
+            index: 0,
+        };
+        let beating_heart_atlas = TextureAtlas {
+            layout: texture_atlas_layouts.add(TextureAtlasLayout::from_grid(
+                UVec2::splat(19),
+                11,
+                1,
+                None,
+                None,
+            )),
+            index: 0,
+        };
+        let texture_assets = world
+            .get_resource::<TextureAssets>()
+            .expect("Textures not loaded");
         Self {
             enemy_1_walk: Animation {
-                image: world
-                    .get_resource::<TextureAssets>()
-                    .expect("Textures not loaded")
-                    .enemy_1
-                    .clone(),
-                atlas: TextureAtlas {
-                    layout: enemy_1_walking_atlas_layout,
-                    index: enemy_1_animation_indices.first,
-                },
-                indices: enemy_1_animation_indices,
+                image: texture_assets.enemy_1.clone(),
+                atlas: enemy_1_walk_atlas,
+                indices: AnimationIndices { first: 0, last: 12 },
+            },
+            beating_heart: Animation {
+                image: texture_assets.beating_heart.clone(),
+                atlas: beating_heart_atlas,
+                indices: AnimationIndices { first: 0, last: 10 },
             },
         }
     }

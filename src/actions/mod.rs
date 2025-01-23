@@ -65,6 +65,8 @@ pub enum MoveMotion {
 #[derive(Component)]
 pub struct Health {
     pub owner: u32,
+    pub health: u32,
+    pub max_health: u32,
 }
 
 #[derive(Component)]
@@ -157,7 +159,7 @@ fn character_triggers(
     effect_assets: Res<EffectAssets>,
     mut commands: Commands,
 ) {
-    for (character_entity, character_transform, mut actions, Health { owner }) in
+    for (character_entity, character_transform, mut actions, Health { owner, .. }) in
         character_query.iter_mut()
     {
         let actions = &mut *actions;
@@ -206,7 +208,7 @@ fn hit_detection(
         if health_query.contains(entity1) {
             std::mem::swap(&mut entity1, &mut entity2);
         }
-        if let (Ok(Damage { target_owner }), Ok(Health { owner })) =
+        if let (Ok(Damage { target_owner }), Ok(Health { owner, .. })) =
             (damage_query.get(entity1), health_query.get(entity2))
         {
             if target_owner == owner {
