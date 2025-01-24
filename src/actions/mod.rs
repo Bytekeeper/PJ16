@@ -125,8 +125,11 @@ pub fn player_keyboard_input(
     let triggering = keyboard_input.pressed(KeyCode::Space);
     if !triggering {
         match actions {
-            Actions::Charging { charge, .. } => {
-                if let Some(trigger_direction) = player_direction {
+            Actions::Charging {
+                charge,
+                trigger_direction,
+            } => {
+                if let Some(trigger_direction) = player_direction.or(*trigger_direction) {
                     match player.form {
                         PlayerForm::Sword => {
                             let mut steps =
@@ -163,7 +166,7 @@ pub fn player_keyboard_input(
                 trigger_direction,
             } => {
                 charge.tick(time.delta());
-                *trigger_direction = player_direction;
+                *trigger_direction = player_direction.or(*trigger_direction);
             }
             // No other Action state allows charging currently
             _ => (),
