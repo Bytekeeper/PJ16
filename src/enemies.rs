@@ -1,4 +1,4 @@
-use crate::actions::{Actions, Health, MoveMotion};
+use crate::actions::{Actions, Health, MoveMotion, Movement};
 use crate::animation::*;
 use crate::loading::Animations;
 use crate::player::Player;
@@ -61,21 +61,22 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
             timer: Timer::from_seconds(0.6, TimerMode::Repeating),
         },
         Actions::default(),
+        Movement::default(),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         StateScoped(GameState::Playing),
     ));
 }
 
 fn ai_think(
-    mut ai_query: Query<(&mut Actions, &Transform), With<Ai>>,
+    mut ai_query: Query<(&mut Movement, &Transform), With<Ai>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     let Ok(player_transform) = player_query.get_single() else {
         warn!("No player found");
         return;
     };
-    for (mut ai, ai_transform) in ai_query.iter_mut() {
-        ai.move_direction = Some(
+    for (mut movement, ai_transform) in ai_query.iter_mut() {
+        movement.move_direction = Some(
             (player_transform.translation - ai_transform.translation)
                 .truncate()
                 .clamp_length_min(100.0),

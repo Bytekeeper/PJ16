@@ -28,15 +28,14 @@ fn update_cooldown_displays(
     for (mut display_text, mut display_visibility, CooldownDisplay(target)) in
         display_query.iter_mut()
     {
-        if let Ok(actions) = actions_query.get(*target) {
-            if actions.trigger_cooldown.finished() {
-                *display_visibility = Visibility::Hidden;
-            } else {
-                display_text.0 = format!(
-                    "{}",
-                    actions.trigger_cooldown.remaining_secs().ceil() as u32
-                );
+        let actions = actions_query.get(*target).expect("Cooldown without action");
+        match actions {
+            Actions::Cooldown(trigger_cooldown) => {
+                display_text.0 = format!("{}", trigger_cooldown.remaining_secs().ceil() as u32);
                 *display_visibility = Visibility::Inherited;
+            }
+            _ => {
+                *display_visibility = Visibility::Hidden;
             }
         }
     }

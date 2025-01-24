@@ -10,9 +10,17 @@ use crate::GameState;
 
 pub struct PlayerPlugin;
 
-#[derive(Component)]
+#[derive(Default, Component)]
 #[require(RigidBody)]
-pub struct Player;
+pub struct Player {
+    pub form: PlayerForm,
+}
+
+#[derive(Default)]
+pub enum PlayerForm {
+    #[default]
+    Sword,
+}
 
 #[derive(Component)]
 pub struct DirectionArrow;
@@ -42,7 +50,7 @@ fn spawn_player(mut commands: Commands, animations: Res<Animations>, fonts: Res<
             Collider::circle(5.0),
             LockedAxes::ROTATION_LOCKED,
             LinearDamping(10.0),
-            Player,
+            Player::default(),
             Health {
                 owner: 0,
                 max_health: 5,
@@ -76,7 +84,11 @@ fn update_direction_arrow(
     let Ok((actions, player_transform)) = player_query.get_single() else {
         return;
     };
-    let Some(player_direction) = actions.trigger_direction else {
+    let Actions::Charging {
+        charge,
+        trigger_direction: Some(player_direction),
+    } = actions
+    else {
         // No direction selected: remove arrow display
         for (entity, _) in arrow_query.iter() {
             commands.entity(entity).despawn();
@@ -88,7 +100,7 @@ fn update_direction_arrow(
     let as_quat = Quat::from_rotation_arc(Vec3::Y, direction);
     let mut target_transform = player_transform.with_rotation(as_quat);
     target_transform.translation += direction * 20.0;
-    target_transform.scale = Vec3::splat(1.0 + actions.trigger_charge.fraction());
+    target_transform.scale = Vec3::splat(1.0 + charge.fraction());
 
     if let Some((_, mut arrow_transform)) = arrow_query.iter_mut().next() {
         *arrow_transform = target_transform;

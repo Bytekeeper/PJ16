@@ -1,16 +1,16 @@
 use avian2d::prelude::*;
 use bevy::math::Vec3Swizzles;
 use bevy::prelude::*;
-use bevy::utils::Duration;
 use bevy_enoki::{
     prelude::{OneShot, ParticleEffectHandle},
     ParticleSpawner,
 };
 use bevy_kira_audio::prelude::*;
+use std::collections::VecDeque;
 
 use crate::actions::game_control::{get_movement, GameControl};
 use crate::loading::{AudioAssets, EffectAssets};
-use crate::player::Player;
+use crate::player::{Player, PlayerForm};
 use crate::GameState;
 
 mod game_control;
@@ -26,8 +26,8 @@ impl Plugin for ActionsPlugin {
         app.add_systems(
             Update,
             (
-                set_movement_actions,
-                character_triggers,
+                player_keyboard_input,
+                character_actions,
                 character_movement,
                 hit_detection,
             )
@@ -38,12 +38,25 @@ impl Plugin for ActionsPlugin {
 }
 
 #[derive(Default, Component)]
-pub struct Actions {
+pub struct Movement {
     pub move_direction: Option<Vec2>,
-    pub trigger_direction: Option<Vec2>,
-    pub trigger_action: bool,
-    pub trigger_cooldown: Timer,
-    pub trigger_charge: Charge,
+}
+
+#[derive(Default, Component)]
+pub enum Actions {
+    #[default]
+    Idle,
+    Cooldown(Timer),
+    Charging {
+        charge: Charge,
+        trigger_direction: Option<Vec2>,
+    },
+    Executing {
+        trigger_direction: Vec2,
+        pending_cooldown: Timer,
+        // Each step will trigger something based on the weapon
+        steps: VecDeque<Timer>,
+    },
 }
 
 #[derive(DerefMut, Deref)]
@@ -74,31 +87,23 @@ pub struct Damage {
     pub target_owner: u32,
 }
 
-pub fn set_movement_actions(
+pub fn player_keyboard_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     touch_input: Res<Touches>,
-    mut player: Query<(&mut Actions, &Transform), With<Player>>,
+    mut player: Query<(&mut Actions, &Transform, &Player)>,
     camera: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
     time: Res<Time>,
 ) {
-    let Ok((mut actions, player_transform)) = player.get_single_mut() else {
+    let Ok((mut actions, player_transform, player)) = player.get_single_mut() else {
         return;
     };
+
     let mut player_direction = Vec2::new(
         get_movement(GameControl::Right, &keyboard_input)
             - get_movement(GameControl::Left, &keyboard_input),
         get_movement(GameControl::Up, &keyboard_input)
             - get_movement(GameControl::Down, &keyboard_input),
     );
-
-    if keyboard_input.pressed(KeyCode::Space) && actions.trigger_cooldown.finished() {
-        actions.trigger_charge.tick(time.delta());
-        actions.trigger_action = false;
-    } else {
-        actions.trigger_action = !actions.trigger_charge.elapsed().is_zero();
-        actions.trigger_charge.reset();
-    }
-    //actions.trigger_action = keyboard_input.pressed(KeyCode::Space);
 
     if let Some(touch_position) = touch_input.first_pressed_position() {
         let (camera, camera_transform) = camera.single();
@@ -110,20 +115,69 @@ pub fn set_movement_actions(
         }
     }
 
-    if player_direction != Vec2::ZERO {
-        actions.trigger_direction = Some(player_direction.normalize());
+    let player_direction = if player_direction != Vec2::ZERO {
+        Some(player_direction.normalize())
     } else {
-        actions.trigger_direction = None;
+        None
+    };
+
+    let actions = &mut *actions;
+    let triggering = keyboard_input.pressed(KeyCode::Space);
+    if !triggering {
+        match actions {
+            Actions::Charging { charge, .. } => {
+                if let Some(trigger_direction) = player_direction {
+                    match player.form {
+                        PlayerForm::Sword => {
+                            let mut steps =
+                                VecDeque::from([Timer::from_seconds(0.0, TimerMode::Once)]);
+                            for _ in 0..charge.elapsed_secs() as u32 {
+                                steps.push_back(Timer::from_seconds(0.2, TimerMode::Once));
+                            }
+                            *actions = Actions::Executing {
+                                trigger_direction,
+                                pending_cooldown: Timer::from_seconds(1.0, TimerMode::Once),
+                                steps,
+                            };
+                        }
+                    }
+                } else {
+                    // No direction was selected, nothing will be done but no cool-down will be
+                    // applied
+                    *actions = Actions::Idle;
+                }
+            }
+            // Unless charging, stopping releasing the trigger will not do anything
+            _ => (),
+        }
+    } else {
+        if matches!(actions, Actions::Idle) {
+            *actions = Actions::Charging {
+                charge: default(),
+                trigger_direction: default(),
+            };
+        }
+        match actions {
+            Actions::Charging {
+                charge,
+                trigger_direction,
+            } => {
+                charge.tick(time.delta());
+                *trigger_direction = player_direction;
+            }
+            // No other Action state allows charging currently
+            _ => (),
+        }
     }
 }
 
 fn character_movement(
     time: Res<Time>,
-    mut character_query: Query<(Entity, &Actions, &mut MoveMotion)>,
+    mut character_query: Query<(Entity, &Movement, &mut MoveMotion)>,
     mut commands: Commands,
 ) {
-    for (character_entity, actions, mut move_motion) in character_query.iter_mut() {
-        if let Some(move_direction) = actions.move_direction {
+    for (character_entity, movement, mut move_motion) in character_query.iter_mut() {
+        if let Some(move_direction) = movement.move_direction {
             match *move_motion {
                 MoveMotion::Sliding { speed } => {
                     commands
@@ -151,7 +205,7 @@ fn character_movement(
     }
 }
 
-fn character_triggers(
+fn character_actions(
     time: Res<Time>,
     mut character_query: Query<(Entity, &Transform, &mut Actions, &Health)>,
     audio: Res<Audio>,
@@ -163,32 +217,50 @@ fn character_triggers(
         character_query.iter_mut()
     {
         let actions = &mut *actions;
-        let timer = &mut actions.trigger_cooldown;
-        timer.tick(time.delta());
-        if actions.trigger_action && timer.finished() {
-            timer.set_duration(Duration::from_secs(1));
-            timer.reset();
-            let mut transform = *character_transform;
-            transform.translation += Vec3::Z;
-            commands.spawn((
-                ParticleSpawner::default(),
-                ParticleEffectHandle(effect_assets.sword_slash.clone()),
-                transform,
-                OneShot::Despawn,
-                Collider::circle(15.0),
-                Damage {
-                    target_owner: 1 - *owner,
-                },
-                Sensor,
-            ));
-            audio.play(audio_assets.woosh.clone()).with_volume(0.3);
-
-            if let Some(character_direction) = actions.trigger_direction {
-                let character_direction = character_direction.normalize_or_zero() * 20000.0;
-                commands
-                    .entity(character_entity)
-                    .insert(ExternalImpulse::new(character_direction));
+        match actions {
+            Actions::Cooldown(timer) => {
+                timer.tick(time.delta());
+                if timer.finished() {
+                    *actions = Actions::Idle;
+                }
             }
+            Actions::Executing {
+                trigger_direction,
+                pending_cooldown,
+                steps,
+            } => {
+                if let Some(item) = steps.front_mut() {
+                    // TODO the time is 'cut off' here, some portion should be subtracted from the next
+                    // timer
+                    item.tick(time.delta());
+                    if item.finished() {
+                        steps.pop_front();
+
+                        let mut transform = *character_transform;
+                        transform.translation += Vec3::Z;
+                        commands.spawn((
+                            ParticleSpawner::default(),
+                            ParticleEffectHandle(effect_assets.sword_slash.clone()),
+                            transform,
+                            OneShot::Despawn,
+                            Collider::circle(15.0),
+                            Damage {
+                                target_owner: 1 - *owner,
+                            },
+                            Sensor,
+                        ));
+                        audio.play(audio_assets.woosh.clone()).with_volume(0.3);
+
+                        let character_direction = trigger_direction.normalize_or_zero() * 20000.0;
+                        commands
+                            .entity(character_entity)
+                            .insert(ExternalImpulse::new(character_direction));
+                    }
+                } else {
+                    *actions = Actions::Cooldown(pending_cooldown.clone());
+                };
+            }
+            _ => (),
         }
     }
 }
