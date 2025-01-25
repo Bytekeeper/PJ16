@@ -183,11 +183,10 @@ fn character_movement(
         if let Some(move_direction) = movement.move_direction {
             match *move_motion {
                 MoveMotion::Sliding { speed } => {
-                    commands
-                        .entity(character_entity)
-                        .insert(ExternalImpulse::new(
-                            (move_direction * time.delta_secs()).clamp_length(0.0, speed) * 200.0,
-                        ));
+                    commands.entity(character_entity).insert(
+                        ExternalForce::new(move_direction.clamp_length(0.0, speed) * 800.0)
+                            .with_persistence(false),
+                    );
                 }
                 MoveMotion::Bouncing {
                     speed,
@@ -198,8 +197,7 @@ fn character_movement(
                         commands
                             .entity(character_entity)
                             .insert(ExternalImpulse::new(
-                                (move_direction * time.delta_secs()).clamp_length(0.0, speed)
-                                    * 2000.0,
+                                move_direction.clamp_length(0.0, speed) * 500.0,
                             ));
                     }
                 }
@@ -270,8 +268,8 @@ fn character_actions(
 
 fn hit_detection(
     mut collision_event_reader: EventReader<Collision>,
-    health_query: Query<&Health>,
-    damage_query: Query<&Damage>,
+    mut health_query: Query<(&Transform, &mut Health)>,
+    damage_query: Query<(&Transform, &Damage)>,
     mut commands: Commands,
 ) {
     for Collision(contacts) in collision_event_reader.read() {
@@ -283,11 +281,21 @@ fn hit_detection(
         if health_query.contains(entity1) {
             std::mem::swap(&mut entity1, &mut entity2);
         }
-        if let (Ok(Damage { target_owner }), Ok(Health { owner, .. })) =
-            (damage_query.get(entity1), health_query.get(entity2))
+        if let (
+            Ok((damage_source_transform, Damage { target_owner })),
+            Ok((target_transform, mut health)),
+        ) = (damage_query.get(entity1), health_query.get_mut(entity2))
         {
+            let Health { owner, health, .. } = &mut *health;
             if target_owner == owner {
-                commands.entity(entity2).despawn();
+                *health -= 1;
+                let delta = target_transform.translation - damage_source_transform.translation;
+                let delta = delta.truncate().normalize_or_zero();
+                let mut ec = commands.entity(entity2);
+                ec.insert(ExternalImpulse::new(delta * 100.0));
+                if *health == 0 {
+                    ec.despawn();
+                }
             }
         }
     }

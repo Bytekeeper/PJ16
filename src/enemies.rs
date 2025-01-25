@@ -37,6 +37,7 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
         },
         LockedAxes::ROTATION_LOCKED,
         MoveMotion::Sliding { speed: 10.0 },
+        Movement::default(),
         Actions::default(),
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         StateScoped(GameState::Playing),
