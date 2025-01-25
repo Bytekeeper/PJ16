@@ -122,7 +122,7 @@ pub fn player_keyboard_input(
     };
 
     let actions = &mut *actions;
-    let triggering = keyboard_input.pressed(KeyCode::Space);
+    let triggering = GameControl::Charge.pressed(&keyboard_input);
     if !triggering {
         match actions {
             Actions::Charging {

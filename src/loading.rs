@@ -110,12 +110,6 @@ impl FromWorld for Animations {
         let player_sword_atlas = texture_assets.player_sword_layout.clone();
         let enemy_1_walk_atlas = texture_assets.enemy_1_walk_layout.clone();
         let enemy_1_attack_atlas = texture_assets.enemy_1_attack_layout.clone();
-        let mut texture_atlas_layouts = world
-            .get_resource_mut::<Assets<TextureAtlasLayout>>()
-            .expect("Missing TextureAtlasLayout assets");
-        let texture_assets = world
-            .get_resource::<TextureAssets>()
-            .expect("Textures not loaded");
         Self {
             player_sword: Animation {
                 image: texture_assets.player_sword.clone(),
