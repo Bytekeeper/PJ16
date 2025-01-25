@@ -1,8 +1,8 @@
 [package]
-name = "bevy_game" # ToDo
+name = "bevy_game"                               # ToDo
 version = "0.1.0"
 publish = false
-authors = ["Niklas Eicker <git@nikl.me>"] # ToDo: you are the author ;)
+authors = ["Niklas Eicker <git@nikl.me>"]        # ToDo: you are the author ;)
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
@@ -36,7 +36,7 @@ strip = true
 [dependencies]
 bevy = { version = "0.15", default-features = false, features = [
     "dynamic_linking",
-    
+
     "animation",
     "bevy_asset",
     "bevy_color",
@@ -69,7 +69,10 @@ bevy = { version = "0.15", default-features = false, features = [
     "x11",
 ] }
 bevy_kira_audio = { version = "0.22.0", features = ["android_shared_stdcxx"] }
-bevy_asset_loader = { version = "0.22" }
+bevy_asset_loader = { version = "0.22", features = [
+    "2d",
+    "standard_dynamic_assets",
+] }
 rand = { version = "0.8.3" }
 webbrowser = { version = "1", features = ["hardened"] }
 
@@ -77,12 +80,16 @@ webbrowser = { version = "1", features = ["hardened"] }
 winit = { version = "0.30", default-features = false }
 image = { version = "0.25", default-features = false }
 ## This greatly improves WGPU's performance due to its heavy use of trace! calls
-log = { version = "0.4", features = ["max_level_debug", "release_max_level_warn"] }
+log = { version = "0.4", features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
 bevy_ecs_tilemap = "0.15.0"
 avian2d = "0.2.0"
 bevy_enoki = "0.3.3"
 tiled = "0.13.0"
 thiserror = "2.0.11"
+serde = { version = "1.0.217", features = ["derive"] }
 
 [build-dependencies]
 embed-resource = "1"
