@@ -34,7 +34,9 @@ strip = true
 #   and android_shared_stdcxx/android-game-activity, since those are covered in `mobile`
 [dependencies]
 bevy = { version = "0.15", default-features = false, features = [
+# TODO Remove for release build
     "dynamic_linking",
+    "file_watcher",
 
     "animation",
     "bevy_asset",

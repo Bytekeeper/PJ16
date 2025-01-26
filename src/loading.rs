@@ -56,10 +56,10 @@ pub struct TextureAssets {
     pub enemy_1: Handle<Aseprite>,
     #[asset(path = "textures/Melee_Enemy_1_Attack.aseprite")]
     pub enemy_1_attack: Handle<Aseprite>,
-    #[asset(path = "textures/Melee_Enemy_2.png")]
-    pub enemy_2: Handle<Image>,
-    #[asset(path = "textures/Melee_Enemy_3.png")]
-    pub enemy_3: Handle<Image>,
+    #[asset(path = "textures/Melee_Enemy_2.aseprite")]
+    pub enemy_2: Handle<Aseprite>,
+    #[asset(path = "textures/Melee_Enemy_3.aseprite")]
+    pub enemy_3: Handle<Aseprite>,
     #[asset(path = "textures/Player_Life.aseprite")]
     pub player_life: Handle<Aseprite>,
     #[asset(path = "textures/title.png")]
