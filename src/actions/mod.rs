@@ -292,10 +292,11 @@ fn hit_detection(
                 let delta = target_transform.translation - damage_source_transform.translation;
                 let delta = delta.truncate().normalize_or_zero();
                 let mut ec = commands.entity(entity2);
-                ec.insert(ExternalImpulse::new(delta * 100.0));
+                ec.insert(ExternalImpulse::new(delta * 1000.0));
                 if *health == 0 {
                     ec.despawn();
                 }
+                commands.entity(entity1).remove::<Damage>();
             }
         }
     }

@@ -1,5 +1,7 @@
-use crate::GameState;
 use bevy::prelude::*;
+
+use crate::loading::TextureAssets;
+use crate::GameState;
 
 pub struct MenuPlugin;
 
@@ -8,8 +10,7 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Menu), setup_menu)
-            .add_systems(Update, click_play_button.run_if(in_state(GameState::Menu)))
-            .add_systems(OnExit(GameState::Menu), cleanup_menu);
+            .add_systems(Update, click_play_button.run_if(in_state(GameState::Menu)));
     }
 }
 
@@ -28,10 +29,7 @@ impl Default for ButtonColors {
     }
 }
 
-#[derive(Component)]
-struct Menu;
-
-fn setup_menu(mut commands: Commands) {
+fn setup_menu(textures: Res<TextureAssets>, mut commands: Commands) {
     info!("menu");
     commands
         .spawn((
@@ -43,7 +41,11 @@ fn setup_menu(mut commands: Commands) {
                 justify_content: JustifyContent::Center,
                 ..default()
             },
-            Menu,
+            ImageNode {
+                image: textures.title.clone(),
+                ..default()
+            },
+            StateScoped(GameState::Menu),
         ))
         .with_children(|children| {
             let button_colors = ButtonColors::default();
@@ -109,11 +111,5 @@ fn click_play_button(
                 *color = button_colors.normal.into();
             }
         }
-    }
-}
-
-fn cleanup_menu(mut commands: Commands, menu: Query<Entity, With<Menu>>) {
-    for entity in menu.iter() {
-        commands.entity(entity).despawn_recursive();
     }
 }

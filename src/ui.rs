@@ -22,13 +22,18 @@ impl Plugin for UiPlugin {
 pub struct CooldownDisplay(pub Entity);
 
 fn update_cooldown_displays(
-    mut display_query: Query<(&mut Text2d, &mut Visibility, &CooldownDisplay)>,
+    mut display_query: Query<(Entity, &mut Text2d, &mut Visibility, &CooldownDisplay)>,
     actions_query: Query<&Actions>,
+    mut commands: Commands,
 ) {
-    for (mut display_text, mut display_visibility, CooldownDisplay(target)) in
+    for (cooldown_entity, mut display_text, mut display_visibility, CooldownDisplay(target)) in
         display_query.iter_mut()
     {
-        let actions = actions_query.get(*target).expect("Cooldown without action");
+        let Ok(actions) = actions_query.get(*target) else {
+            // Maybe the entity is dead? Remove the cool-down display.
+            commands.entity(cooldown_entity).despawn();
+            return;
+        };
         match actions {
             Actions::Cooldown(trigger_cooldown) => {
                 display_text.0 = format!("{}", trigger_cooldown.remaining_secs().ceil() as u32);

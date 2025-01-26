@@ -1,5 +1,6 @@
 use crate::tiled::TiledMap;
 use bevy::prelude::*;
+use bevy_aseprite_ultra::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_enoki::Particle2dEffect;
 use bevy_kira_audio::AudioSource;
@@ -53,10 +54,8 @@ pub struct TextureAssets {
     pub player_bow: Handle<Image>,
     #[asset(path = "textures/placeholder/spritesheet.png")]
     pub tiles: Handle<Image>,
-    #[asset(path = "textures/Melee_Enemy_1.png")]
-    pub enemy_1: Handle<Image>,
-    #[asset(key = "enemy_1_walk.layout")]
-    pub enemy_1_walk_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "textures/Melee_Enemy_1.aseprite")]
+    pub enemy_1: Handle<Aseprite>,
     #[asset(key = "enemy_1_attack.layout")]
     pub enemy_1_attack_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/Melee_Enemy_1_Attack_v2.png")]
@@ -73,6 +72,8 @@ pub struct TextureAssets {
     pub beating_heart_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/Player_Life_Depleted.png")]
     pub broken_heart: Handle<Image>,
+    #[asset(path = "textures/title.png")]
+    pub title: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -90,7 +91,6 @@ pub struct EffectAssets {
 #[derive(Resource)]
 pub struct Animations {
     pub player_sword: Animation,
-    pub enemy_1_walk: Animation,
     pub enemy_1_attack: Animation,
     pub beating_heart: Animation,
 }
@@ -108,18 +108,12 @@ impl FromWorld for Animations {
             .expect("TextureAssets missing");
         let beating_heart_atlas = texture_assets.beating_heart_layout.clone();
         let player_sword_atlas = texture_assets.player_sword_layout.clone();
-        let enemy_1_walk_atlas = texture_assets.enemy_1_walk_layout.clone();
         let enemy_1_attack_atlas = texture_assets.enemy_1_attack_layout.clone();
         Self {
             player_sword: Animation {
                 image: texture_assets.player_sword.clone(),
                 atlas: TextureAtlas::from(player_sword_atlas),
                 indices: AnimationIndices { first: 0, last: 16 },
-            },
-            enemy_1_walk: Animation {
-                image: texture_assets.enemy_1.clone(),
-                atlas: TextureAtlas::from(enemy_1_walk_atlas),
-                indices: AnimationIndices { first: 0, last: 12 },
             },
             enemy_1_attack: Animation {
                 image: texture_assets.enemy_1_attack.clone(),

@@ -26,6 +26,7 @@ use crate::tilemap::TilemapPlugin;
 use crate::ui::UiPlugin;
 
 use avian2d::{prelude::Gravity, PhysicsPlugins};
+use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_enoki::EnokiPlugin;
 
 use bevy::app::App;
@@ -64,6 +65,7 @@ impl Plugin for GamePlugin {
                 PhysicsPlugins::default(),
                 EnokiPlugin,
                 AnimationPlugin,
+                AsepriteUltraPlugin,
                 CameraPlugin,
                 UiPlugin,
             ))

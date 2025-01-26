@@ -1,12 +1,12 @@
 use crate::actions::{Actions, Health, MoveMotion, Movement};
-use crate::animation::*;
-use crate::loading::Animations;
+use crate::loading::TextureAssets;
 use crate::player::Player;
 use crate::GameState;
 
 use avian2d::prelude::{Collider, LockedAxes};
 use bevy::math::vec3;
 use bevy::prelude::*;
+use bevy_aseprite_ultra::prelude::*;
 
 pub struct EnemiesPlugin;
 
@@ -20,14 +20,13 @@ impl Plugin for EnemiesPlugin {
     }
 }
 
-fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
+fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn((
-        Sprite::from_atlas_image(
-            animations.enemy_1_walk.image.clone(),
-            animations.enemy_1_walk.atlas.clone(),
-        ),
+        AseSpriteAnimation {
+            aseprite: textures.enemy_1.clone(),
+            animation: Animation::tag("walk").with_repeat(AnimationRepeat::Loop),
+        },
         Transform::from_translation(vec3(100.0, 100.0, 5.0)),
-        animations.enemy_1_walk.indices,
         Ai,
         Collider::circle(5.0),
         Health {
@@ -39,16 +38,14 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
         MoveMotion::Sliding { speed: 10.0 },
         Movement::default(),
         Actions::default(),
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         StateScoped(GameState::Playing),
     ));
     commands.spawn((
-        Sprite::from_atlas_image(
-            animations.enemy_1_walk.image.clone(),
-            animations.enemy_1_walk.atlas.clone(),
-        ),
+        AseSpriteAnimation {
+            aseprite: textures.enemy_1.clone(),
+            animation: Animation::tag("walk").with_repeat(AnimationRepeat::Loop),
+        },
         Transform::from_translation(vec3(-100.0, 100.0, 5.0)),
-        animations.enemy_1_walk.indices,
         Ai,
         Collider::circle(5.0),
         Health {
@@ -63,24 +60,37 @@ fn spawn_enemies(mut commands: Commands, animations: Res<Animations>) {
         },
         Actions::default(),
         Movement::default(),
-        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         StateScoped(GameState::Playing),
     ));
 }
 
 fn ai_think(
-    mut ai_query: Query<(&mut Movement, &Transform), With<Ai>>,
+    mut ai_query: Query<(&mut Movement, &mut Actions, &Transform), With<Ai>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     let Ok(player_transform) = player_query.get_single() else {
-        warn!("No player found");
+        debug!("No player found");
         return;
     };
-    for (mut movement, ai_transform) in ai_query.iter_mut() {
-        movement.move_direction = Some(
-            (player_transform.translation - ai_transform.translation)
-                .truncate()
-                .clamp_length_min(100.0),
-        );
+    for (mut movement, mut actions, ai_transform) in ai_query.iter_mut() {
+        let actions = &mut *actions;
+        let delta = (player_transform.translation - ai_transform.translation).truncate();
+        if delta.length() > 10.0 {
+            movement.move_direction = Some(delta.clamp_length_min(10.0));
+        } else {
+            movement.move_direction = None;
+            match actions {
+                Actions::Idle => {
+                    // TODO This is one of the points where we decide on how the monster attacks
+                    *actions = Actions::Executing {
+                        trigger_direction: delta,
+                        pending_cooldown: Timer::from_seconds(1.0, TimerMode::Once),
+                        steps: [Timer::from_seconds(0.0, TimerMode::Once)].into(),
+                    };
+                }
+                // When not Idle, were either attacking or on cool-down: Just wait
+                _ => (),
+            }
+        }
     }
 }

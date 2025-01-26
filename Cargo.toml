@@ -1,8 +1,7 @@
 [package]
-name = "bevy_game"                               # ToDo
+name = "blade_soul"        
 version = "0.1.0"
 publish = false
-authors = ["Niklas Eicker <git@nikl.me>"]        # ToDo: you are the author ;)
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
@@ -89,6 +88,7 @@ avian2d = "0.2.0"
 bevy_enoki = "0.3.3"
 tiled = "0.13.0"
 thiserror = "2.0.11"
+bevy_aseprite_ultra = "0.4.1"
 
 [build-dependencies]
 embed-resource = "1"
