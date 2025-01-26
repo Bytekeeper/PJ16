@@ -52,12 +52,17 @@ pub struct HealthDisplay;
 fn update_health_display(
     mut commands: Commands,
     textures: Res<TextureAssets>,
-    player_query: Query<(&Health, Ref<Player>)>,
+    player_query: Query<&Health, (Changed<Health>, With<Player>)>,
+    health_query: Query<Entity, With<HealthDisplay>>,
 ) {
-    let Ok((player_health, player)) = player_query.get_single() else {
+    let Ok(player_health) = player_query.get_single() else {
         return;
     };
-    if player.is_added() {
+    let health_entity = health_query.get_single();
+    let health_entity = if let Ok(health_entity) = health_entity {
+        commands.entity(health_entity).despawn_descendants();
+        health_entity
+    } else {
         commands
             .spawn((
                 Node {
@@ -71,34 +76,35 @@ fn update_health_display(
                 StateScoped(GameState::Playing),
                 HealthDisplay,
             ))
-            .with_children(|parent| {
-                for i in 0..player_health.max_health {
-                    if i < player_health.health {
-                        parent.spawn((
-                            AseUiAnimation {
-                                aseprite: textures.player_life.clone(),
-                                animation: Animation::tag("beating"),
-                            },
-                            Node {
-                                width: Val::Px(38.0),
-                                height: Val::Px(38.0),
-                                ..default()
-                            },
-                        ));
-                    } else {
-                        parent.spawn((
-                            AseUiAnimation {
-                                aseprite: textures.player_life.clone(),
-                                animation: Animation::tag("depleted"),
-                            },
-                            Node {
-                                width: Val::Px(38.0),
-                                height: Val::Px(38.0),
-                                ..default()
-                            },
-                        ));
-                    }
-                }
-            });
-    }
+            .id()
+    };
+    commands.entity(health_entity).with_children(|parent| {
+        for i in 0..player_health.max_health {
+            if i < player_health.health {
+                parent.spawn((
+                    AseUiAnimation {
+                        aseprite: textures.player_life.clone(),
+                        animation: Animation::tag("beating"),
+                    },
+                    Node {
+                        width: Val::Px(38.0),
+                        height: Val::Px(38.0),
+                        ..default()
+                    },
+                ));
+            } else {
+                parent.spawn((
+                    AseUiAnimation {
+                        aseprite: textures.player_life.clone(),
+                        animation: Animation::tag("depleted"),
+                    },
+                    Node {
+                        width: Val::Px(38.0),
+                        height: Val::Px(38.0),
+                        ..default()
+                    },
+                ));
+            }
+        }
+    });
 }
