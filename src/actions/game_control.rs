@@ -78,34 +78,31 @@ fn keyboard_input(
             .iter()
             .any(|g| g.pressed(GamepadButton::South));
     if !triggering {
-        match actions {
-            Actions::Charging {
-                charge,
-                trigger_direction,
-            } => {
-                if let Some(trigger_direction) = player_direction.or(*trigger_direction) {
-                    match player.form {
-                        PlayerForm::Sword => {
-                            let mut steps =
-                                VecDeque::from([Timer::from_seconds(0.0, TimerMode::Once)]);
-                            for _ in 0..charge.elapsed_secs() as u32 {
-                                steps.push_back(Timer::from_seconds(0.2, TimerMode::Once));
-                            }
-                            *actions = Actions::Executing {
-                                trigger_direction,
-                                pending_cooldown: Timer::from_seconds(1.0, TimerMode::Once),
-                                steps,
-                            };
+        if let Actions::Charging {
+            charge,
+            trigger_direction,
+        } = actions
+        {
+            if let Some(trigger_direction) = player_direction.or(*trigger_direction) {
+                match player.form {
+                    PlayerForm::Sword => {
+                        let mut steps = VecDeque::from([Timer::from_seconds(0.0, TimerMode::Once)]);
+                        for _ in 0..charge.elapsed_secs() as u32 {
+                            steps.push_back(Timer::from_seconds(0.2, TimerMode::Once));
                         }
+                        *actions = Actions::Executing {
+                            trigger_direction,
+                            pending_cooldown: Timer::from_seconds(1.0, TimerMode::Once),
+                            steps,
+                        };
                     }
-                } else {
-                    // No direction was selected, nothing will be done but no cool-down will be
-                    // applied
-                    *actions = Actions::Idle;
                 }
+            } else {
+                // No direction was selected, nothing will be done but no cool-down will be
+                // applied
+                *actions = Actions::Idle;
             }
             // Unless charging, stopping releasing the trigger will not do anything
-            _ => (),
         }
     } else {
         if matches!(actions, Actions::Idle) {
@@ -114,17 +111,15 @@ fn keyboard_input(
                 trigger_direction: default(),
             };
         }
-        match actions {
-            Actions::Charging {
-                charge,
-                trigger_direction,
-            } => {
-                charge.tick(time.delta());
-                *trigger_direction = player_direction.or(*trigger_direction);
-            }
-            // No other Action state allows charging currently
-            _ => (),
+        if let Actions::Charging {
+            charge,
+            trigger_direction,
+        } = actions
+        {
+            charge.tick(time.delta());
+            *trigger_direction = player_direction.or(*trigger_direction);
         }
+        // No other Action state allows charging currently
     }
 }
 

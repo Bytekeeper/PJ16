@@ -30,14 +30,17 @@ lto = true
 codegen-units = 1
 strip = true
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy = { version = "0.15", default-features = false, features = [
+# TODO Remove for release build
+    "dynamic_linking",
+    "file_watcher"]}
+
+
 # All of Bevy's default features exept for the audio related ones (bevy_audio, vorbis), since they clash with bevy_kira_audio
 #   and android_shared_stdcxx/android-game-activity, since those are covered in `mobile`
 [dependencies]
 bevy = { version = "0.15", default-features = false, features = [
-# TODO Remove for release build
-    "dynamic_linking",
-    "file_watcher",
-
     "animation",
     "bevy_asset",
     "bevy_color",

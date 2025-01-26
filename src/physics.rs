@@ -5,10 +5,10 @@ use bevy::prelude::*;
 pub enum CollisionLayer {
     #[default]
     Default,
-    Player,
-    Enemy,
-    Item,
-    Ground,
+    //Player,
+    //Enemy,
+    //Item,
+    //Ground,
 }
 
 pub struct PhysicsPlugin;

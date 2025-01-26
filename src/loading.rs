@@ -44,22 +44,20 @@ pub struct TextureAssets {
     pub arrow: Handle<Image>,
     #[asset(path = "textures/player_sword.aseprite")]
     pub player_sword: Handle<Aseprite>,
-    #[asset(path = "textures/Player_Mace_1.png")]
-    pub player_mace: Handle<Image>,
-    #[asset(path = "textures/Player_Spear_1.png")]
-    pub player_spear: Handle<Image>,
-    #[asset(path = "textures/player_Bow.png")]
-    pub player_bow: Handle<Image>,
-    #[asset(path = "textures/placeholder/spritesheet.png")]
-    pub tiles: Handle<Image>,
+    //#[asset(path = "textures/Player_Mace_1.png")]
+    //pub player_mace: Handle<Image>,
+    //#[asset(path = "textures/Player_Spear_1.png")]
+    //pub player_spear: Handle<Image>,
+    //#[asset(path = "textures/player_Bow.png")]
+    //pub player_bow: Handle<Image>,
     #[asset(path = "textures/Melee_Enemy_1.aseprite")]
     pub enemy_1: Handle<Aseprite>,
     #[asset(path = "textures/Melee_Enemy_1_Attack.aseprite")]
     pub enemy_1_attack: Handle<Aseprite>,
-    #[asset(path = "textures/Melee_Enemy_2.aseprite")]
-    pub enemy_2: Handle<Aseprite>,
-    #[asset(path = "textures/Melee_Enemy_3.aseprite")]
-    pub enemy_3: Handle<Aseprite>,
+    //#[asset(path = "textures/Melee_Enemy_2.aseprite")]
+    //pub enemy_2: Handle<Aseprite>,
+    //#[asset(path = "textures/Melee_Enemy_3.aseprite")]
+    //pub enemy_3: Handle<Aseprite>,
     #[asset(path = "textures/Player_Life.aseprite")]
     pub player_life: Handle<Aseprite>,
     #[asset(path = "textures/title.png")]

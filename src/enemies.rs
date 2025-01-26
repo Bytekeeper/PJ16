@@ -12,14 +12,14 @@ pub struct EnemiesPlugin;
 
 #[derive(Component, Default)]
 pub struct Ai {
-    pub form: EnemyForm,
+    //pub form: EnemyForm,
 }
 
-#[derive(Default)]
-pub enum EnemyForm {
-    #[default]
-    Melee,
-}
+//#[derive(Default)]
+//pub enum EnemyForm {
+//    #[default]
+//    Melee,
+//}
 
 impl Plugin for EnemiesPlugin {
     fn build(&self, app: &mut App) {
@@ -91,18 +91,15 @@ fn ai_think(
             movement.move_direction = Some(delta.clamp_length_min(10.0));
         } else {
             movement.move_direction = None;
-            match actions {
-                Actions::Idle => {
-                    // TODO This is one of the points where we decide on how the monster attacks
-                    *actions = Actions::Executing {
-                        trigger_direction: delta,
-                        pending_cooldown: Timer::from_seconds(0.5, TimerMode::Once),
-                        steps: [Timer::from_seconds(0.9, TimerMode::Once)].into(),
-                    };
-                }
-                // When not Idle, were either attacking or on cool-down: Just wait
-                _ => (),
+            if matches!(actions, Actions::Idle) {
+                // TODO This is one of the points where we decide on how the monster attacks
+                *actions = Actions::Executing {
+                    trigger_direction: delta,
+                    pending_cooldown: Timer::from_seconds(0.5, TimerMode::Once),
+                    steps: [Timer::from_seconds(0.9, TimerMode::Once)].into(),
+                };
             }
+            // else we're either attacking or on cool-down: Just wait
         }
     }
 }
@@ -121,7 +118,7 @@ fn update_sprite(
         if animation.aseprite != *anim_handle {
             animation.aseprite = anim_handle.clone();
         }
-        if animation.animation.tag.as_ref().map(|s| s.as_str()) != Some(anim_name) {
+        if animation.animation.tag.as_deref() != Some(anim_name) {
             animation.animation = Animation::tag(anim_name);
         }
     }
