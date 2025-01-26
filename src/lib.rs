@@ -26,6 +26,7 @@ use crate::ui::UiPlugin;
 use avian2d::{prelude::Gravity, PhysicsPlugins};
 use bevy_aseprite_ultra::AsepriteUltraPlugin;
 use bevy_enoki::EnokiPlugin;
+use bevy_rand::prelude::{EntropyPlugin, WyRand};
 
 use bevy::app::App;
 #[cfg(debug_assertions)]
@@ -65,6 +66,7 @@ impl Plugin for GamePlugin {
                 AsepriteUltraPlugin,
                 CameraPlugin,
                 UiPlugin,
+                EntropyPlugin::<WyRand>::default(),
             ))
             .enable_state_scoped_entities::<GameState>()
             .insert_resource(Gravity(Vec2::ZERO));
