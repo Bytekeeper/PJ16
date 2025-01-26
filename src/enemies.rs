@@ -10,13 +10,25 @@ use bevy_aseprite_ultra::prelude::*;
 
 pub struct EnemiesPlugin;
 
-#[derive(Component)]
-pub struct Ai;
+#[derive(Component, Default)]
+pub struct Ai {
+    pub form: EnemyForm,
+}
+
+#[derive(Default)]
+pub enum EnemyForm {
+    #[default]
+    Melee,
+}
 
 impl Plugin for EnemiesPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Playing), spawn_enemies)
-            .add_systems(PreUpdate, ai_think.run_if(in_state(GameState::Playing)));
+            .add_systems(PreUpdate, ai_think.run_if(in_state(GameState::Playing)))
+            .add_systems(
+                PostUpdate,
+                update_sprite.run_if(in_state(GameState::Playing)),
+            );
     }
 }
 
@@ -27,7 +39,7 @@ fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {
             animation: Animation::tag("walk"),
         },
         Transform::from_translation(vec3(100.0, 100.0, 5.0)),
-        Ai,
+        Ai::default(),
         Collider::circle(5.0),
         Health {
             owner: 1,
@@ -46,7 +58,7 @@ fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {
             animation: Animation::tag("walk"),
         },
         Transform::from_translation(vec3(-100.0, 100.0, 5.0)),
-        Ai,
+        Ai::default(),
         Collider::circle(5.0),
         Health {
             owner: 1,
@@ -84,13 +96,33 @@ fn ai_think(
                     // TODO This is one of the points where we decide on how the monster attacks
                     *actions = Actions::Executing {
                         trigger_direction: delta,
-                        pending_cooldown: Timer::from_seconds(1.0, TimerMode::Once),
-                        steps: [Timer::from_seconds(0.0, TimerMode::Once)].into(),
+                        pending_cooldown: Timer::from_seconds(0.5, TimerMode::Once),
+                        steps: [Timer::from_seconds(0.9, TimerMode::Once)].into(),
                     };
                 }
                 // When not Idle, were either attacking or on cool-down: Just wait
                 _ => (),
             }
+        }
+    }
+}
+
+/// Update the enemy sprite animation based on the action it performs
+fn update_sprite(
+    mut animation_query: Query<(&mut AseSpriteAnimation, &Actions), With<Ai>>,
+    textures: Res<TextureAssets>,
+) {
+    for (mut animation, actions) in animation_query.iter_mut() {
+        let (anim_handle, anim_name) = match actions {
+            Actions::Idle => (&textures.enemy_1, "walk"),
+            Actions::Executing { .. } => (&textures.enemy_1_attack, "attack"),
+            Actions::Cooldown(_) | Actions::Charging { .. } => continue,
+        };
+        if animation.aseprite != *anim_handle {
+            animation.aseprite = anim_handle.clone();
+        }
+        if animation.animation.tag.as_ref().map(|s| s.as_str()) != Some(anim_name) {
+            animation.animation = Animation::tag(anim_name);
         }
     }
 }
