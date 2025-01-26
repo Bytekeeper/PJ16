@@ -1,8 +1,8 @@
 use bevy::prelude::*;
+use bevy_aseprite_ultra::prelude::*;
 
 use crate::actions::{Actions, Health};
-use crate::animation::AnimationTimer;
-use crate::loading::{Animations, TextureAssets};
+use crate::loading::TextureAssets;
 use crate::player::Player;
 use crate::GameState;
 
@@ -51,7 +51,6 @@ pub struct HealthDisplay;
 
 fn update_health_display(
     mut commands: Commands,
-    animations: Res<Animations>,
     textures: Res<TextureAssets>,
     player_query: Query<(&Health, Ref<Player>)>,
 ) {
@@ -75,15 +74,11 @@ fn update_health_display(
             .with_children(|parent| {
                 for i in 0..player_health.max_health {
                     if i < player_health.health {
-                        let mut atlas = animations.beating_heart.atlas.clone();
-                        atlas.index = i as usize;
                         parent.spawn((
-                            ImageNode::from_atlas_image(
-                                animations.beating_heart.image.clone(),
-                                atlas,
-                            ),
-                            animations.beating_heart.indices,
-                            AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+                            AseUiAnimation {
+                                aseprite: textures.player_life.clone(),
+                                animation: Animation::tag("beating"),
+                            },
                             Node {
                                 width: Val::Px(38.0),
                                 height: Val::Px(38.0),
@@ -92,7 +87,10 @@ fn update_health_display(
                         ));
                     } else {
                         parent.spawn((
-                            ImageNode::new(textures.broken_heart.clone()),
+                            AseUiAnimation {
+                                aseprite: textures.player_life.clone(),
+                                animation: Animation::tag("depleted"),
+                            },
                             Node {
                                 width: Val::Px(38.0),
                                 height: Val::Px(38.0),

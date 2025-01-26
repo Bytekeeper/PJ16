@@ -1,10 +1,10 @@
 use avian2d::prelude::*;
 use bevy::math::vec3;
 use bevy::prelude::*;
+use bevy_aseprite_ultra::prelude::*;
 
 use crate::actions::{Actions, Health};
-use crate::animation::AnimationTimer;
-use crate::loading::{Animations, Fonts, TextureAssets};
+use crate::loading::{Fonts, TextureAssets};
 use crate::ui::CooldownDisplay;
 use crate::GameState;
 
@@ -37,15 +37,13 @@ impl Plugin for PlayerPlugin {
     }
 }
 
-fn spawn_player(mut commands: Commands, animations: Res<Animations>, fonts: Res<Fonts>) {
+fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>, fonts: Res<Fonts>) {
     commands
         .spawn((
-            Sprite::from_atlas_image(
-                animations.player_sword.image.clone(),
-                animations.player_sword.atlas.clone(),
-            ),
-            animations.player_sword.indices,
-            AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+            AseSpriteAnimation {
+                aseprite: textures.player_sword.clone(),
+                animation: Animation::tag("flaming"),
+            },
             Transform::from_translation(Vec3::new(0., 0., 2.)),
             Collider::circle(5.0),
             LockedAxes::ROTATION_LOCKED,

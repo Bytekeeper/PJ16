@@ -24,7 +24,7 @@ fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn((
         AseSpriteAnimation {
             aseprite: textures.enemy_1.clone(),
-            animation: Animation::tag("walk").with_repeat(AnimationRepeat::Loop),
+            animation: Animation::tag("walk"),
         },
         Transform::from_translation(vec3(100.0, 100.0, 5.0)),
         Ai,
@@ -43,7 +43,7 @@ fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {
     commands.spawn((
         AseSpriteAnimation {
             aseprite: textures.enemy_1.clone(),
-            animation: Animation::tag("walk").with_repeat(AnimationRepeat::Loop),
+            animation: Animation::tag("walk"),
         },
         Transform::from_translation(vec3(-100.0, 100.0, 5.0)),
         Ai,

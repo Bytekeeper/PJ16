@@ -1,7 +1,6 @@
 #![allow(clippy::type_complexity)]
 
 mod actions;
-mod animation;
 mod audio;
 mod camera;
 mod enemies;
@@ -14,7 +13,6 @@ mod tilemap;
 mod ui;
 
 use crate::actions::ActionsPlugin;
-use crate::animation::AnimationPlugin;
 use crate::audio::InternalAudioPlugin;
 use crate::camera::CameraPlugin;
 use crate::enemies::EnemiesPlugin;
@@ -64,7 +62,6 @@ impl Plugin for GamePlugin {
                 EnemiesPlugin,
                 PhysicsPlugins::default(),
                 EnokiPlugin,
-                AnimationPlugin,
                 AsepriteUltraPlugin,
                 CameraPlugin,
                 UiPlugin,
