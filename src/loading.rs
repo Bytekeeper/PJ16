@@ -74,6 +74,8 @@ pub struct TileMapAssets {
 pub struct EffectAssets {
     #[asset(path = "effects/sword-slash.ron")]
     pub sword_slash: Handle<Particle2dEffect>,
+    #[asset(path = "effects/enemy_1-attack.ron")]
+    pub enemy_1_attack: Handle<Particle2dEffect>,
 }
 
 #[derive(AssetCollection, Resource)]

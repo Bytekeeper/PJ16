@@ -48,8 +48,32 @@ pub enum Actions {
         trigger_direction: Vec2,
         pending_cooldown: Timer,
         // Each step will trigger something based on the weapon
-        steps: VecDeque<Timer>,
+        steps: VecDeque<Step>,
     },
+}
+
+pub struct Step {
+    pub timer: Timer,
+    pub effect: Effect,
+}
+
+pub enum Effect {
+    None,
+    Circle,
+    Splash,
+}
+
+impl Step {
+    pub fn from_timer(timer: Timer) -> Self {
+        Self {
+            timer,
+            effect: Effect::None,
+        }
+    }
+
+    pub fn with_effect(self, effect: Effect) -> Self {
+        Self { effect, ..self }
+    }
 }
 
 #[derive(DerefMut, Deref)]
@@ -139,15 +163,15 @@ fn character_actions(
                 if let Some(item) = steps.front_mut() {
                     // TODO the time is 'cut off' here, some portion should be subtracted from the next
                     // timer
-                    item.tick(time.delta());
-                    if item.finished() {
-                        steps.pop_front();
+                    item.timer.tick(time.delta());
+                    if item.timer.finished() {
+                        let item = steps.pop_front().expect("No steps found");
 
                         let mut transform = *character_transform;
                         transform.translation += Vec3::Z;
-                        commands.spawn((
-                            ParticleSpawner::default(),
-                            ParticleEffectHandle(effect_assets.sword_slash.clone()),
+                        transform.rotation =
+                            Quat::from_rotation_arc_2d(Vec2::Y, *trigger_direction);
+                        let mut ec = commands.spawn((
                             transform,
                             OneShot::Despawn,
                             Collider::circle(15.0),
@@ -156,6 +180,22 @@ fn character_actions(
                             },
                             Sensor,
                         ));
+                        match item.effect {
+                            Effect::Circle => {
+                                ec.insert((
+                                    ParticleSpawner::default(),
+                                    ParticleEffectHandle(effect_assets.sword_slash.clone()),
+                                ));
+                            }
+                            Effect::Splash => {
+                                ec.insert((
+                                    ParticleSpawner::default(),
+                                    ParticleEffectHandle(effect_assets.enemy_1_attack.clone()),
+                                ));
+                            }
+                            Effect::None => (),
+                        }
+
                         audio.play(audio_assets.woosh.clone()).with_volume(0.3);
 
                         let character_direction = trigger_direction.normalize_or_zero() * 20000.0;

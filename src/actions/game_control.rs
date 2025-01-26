@@ -2,7 +2,7 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use std::collections::VecDeque;
 
-use crate::actions::Actions;
+use crate::actions::{Actions, Effect, Step};
 use crate::player::{Player, PlayerForm};
 
 pub const FOLLOW_EPSILON: f32 = 5.;
@@ -86,9 +86,16 @@ fn keyboard_input(
             if let Some(trigger_direction) = player_direction.or(*trigger_direction) {
                 match player.form {
                     PlayerForm::Sword => {
-                        let mut steps = VecDeque::from([Timer::from_seconds(0.0, TimerMode::Once)]);
+                        let mut steps = VecDeque::from([Step::from_timer(Timer::from_seconds(
+                            0.0,
+                            TimerMode::Once,
+                        ))
+                        .with_effect(Effect::Circle)]);
                         for _ in 0..charge.elapsed_secs() as u32 {
-                            steps.push_back(Timer::from_seconds(0.2, TimerMode::Once));
+                            steps.push_back(
+                                Step::from_timer(Timer::from_seconds(0.2, TimerMode::Once))
+                                    .with_effect(Effect::Circle),
+                            );
                         }
                         *actions = Actions::Executing {
                             trigger_direction,

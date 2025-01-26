@@ -1,4 +1,4 @@
-use crate::actions::{Actions, Health, MoveMotion, Movement};
+use crate::actions::{Actions, Effect, Health, MoveMotion, Movement, Step};
 use crate::loading::TextureAssets;
 use crate::player::Player;
 use crate::GameState;
@@ -96,7 +96,9 @@ fn ai_think(
                 *actions = Actions::Executing {
                     trigger_direction: delta,
                     pending_cooldown: Timer::from_seconds(0.5, TimerMode::Once),
-                    steps: [Timer::from_seconds(0.9, TimerMode::Once)].into(),
+                    steps: [Step::from_timer(Timer::from_seconds(0.8, TimerMode::Once))
+                        .with_effect(Effect::Splash)]
+                    .into(),
                 };
             }
             // else we're either attacking or on cool-down: Just wait
