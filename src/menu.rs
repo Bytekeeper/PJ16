@@ -92,7 +92,14 @@ fn click_play_button(
         ),
         (Changed<Interaction>, With<Button>),
     >,
+    gamepad_input: Query<&Gamepad>,
 ) {
+    if gamepad_input
+        .iter()
+        .any(|g| g.pressed(GamepadButton::South))
+    {
+        next_state.set(GameState::Playing);
+    }
     for (interaction, mut color, button_colors, change_state, open_link) in &mut interaction_query {
         match *interaction {
             Interaction::Pressed => {
