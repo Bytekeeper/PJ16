@@ -232,14 +232,13 @@ fn hit_detection(
             Ok((target_transform, mut health)),
         ) = (damage_query.get(entity1), health_query.get_mut(entity2))
         {
-            let Health { owner, health, .. } = &mut *health;
-            if target_owner == owner {
-                *health -= 1;
+            if *target_owner == health.owner {
+                health.health -= 1;
                 let delta = target_transform.translation - damage_source_transform.translation;
                 let delta = delta.truncate().normalize_or_zero();
                 let mut ec = commands.entity(entity2);
                 ec.insert(ExternalImpulse::new(delta * 1000.0));
-                if *health == 0 {
+                if health.health == 0 {
                     ec.despawn();
                 }
                 commands.entity(entity1).remove::<Damage>();

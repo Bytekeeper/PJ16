@@ -61,6 +61,7 @@ fn update_health_display(
     let health_entity = health_query.get_single();
     let health_entity = if let Ok(health_entity) = health_entity {
         commands.entity(health_entity).despawn_descendants();
+        error!("GO");
         health_entity
     } else {
         commands
