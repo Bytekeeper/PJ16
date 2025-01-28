@@ -52,7 +52,7 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>, fonts: Res
             Health {
                 owner: 0,
                 max_health: 5,
-                health: 3,
+                health: 5,
             },
             Actions::default(),
             StateScoped(GameState::Playing),

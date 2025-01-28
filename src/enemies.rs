@@ -25,31 +25,31 @@ pub struct Ai {
 
 impl Plugin for EnemiesPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::Playing), spawn_enemies)
-            .add_systems(
-                PreUpdate,
-                (enemy_spawner, ai_think)
-                    .chain()
-                    .run_if(in_state(GameState::Playing)),
-            )
-            .add_systems(
-                PostUpdate,
-                update_sprite.run_if(in_state(GameState::Playing)),
-            );
+        app.add_systems(
+            PreUpdate,
+            (enemy_spawner, ai_think)
+                .chain()
+                .run_if(in_state(GameState::Playing)),
+        )
+        .add_systems(
+            PostUpdate,
+            update_sprite.run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
 fn enemy_spawner(
     mut commands: Commands,
     mut rng: GlobalEntropy<WyRand>,
-    mut counter: Local<f32>,
+    mut enemy_1_counter: Local<(f32, f32)>,
     textures: Res<TextureAssets>,
     time: Res<Time>,
 ) {
-    *counter += rng.gen::<f32>() * time.delta_secs();
+    enemy_1_counter.0 += rng.gen::<f32>() * time.delta_secs();
 
-    if *counter > 3.0 {
-        *counter -= 3.0;
+    if enemy_1_counter.0 > enemy_1_counter.1 {
+        enemy_1_counter.1 += 1.0;
+        enemy_1_counter.0 -= 1.0;
 
         commands.spawn((
             AseSpriteAnimation {
@@ -65,8 +65,8 @@ fn enemy_spawner(
             Collider::circle(5.0),
             Health {
                 owner: 1,
-                max_health: 3,
-                health: 3,
+                max_health: 2,
+                health: 2,
             },
             LockedAxes::ROTATION_LOCKED,
             MoveMotion::Bouncing {
@@ -78,50 +78,6 @@ fn enemy_spawner(
             StateScoped(GameState::Playing),
         ));
     }
-}
-
-fn spawn_enemies(mut commands: Commands, textures: Res<TextureAssets>) {
-    commands.spawn((
-        AseSpriteAnimation {
-            aseprite: textures.enemy_1.clone(),
-            animation: Animation::tag("walk"),
-        },
-        Transform::from_translation(vec3(100.0, 100.0, 5.0)),
-        Ai::default(),
-        Collider::circle(5.0),
-        Health {
-            owner: 1,
-            max_health: 3,
-            health: 3,
-        },
-        LockedAxes::ROTATION_LOCKED,
-        MoveMotion::Sliding { speed: 10.0 },
-        Movement::default(),
-        Actions::default(),
-        StateScoped(GameState::Playing),
-    ));
-    commands.spawn((
-        AseSpriteAnimation {
-            aseprite: textures.enemy_1.clone(),
-            animation: Animation::tag("walk"),
-        },
-        Transform::from_translation(vec3(-100.0, 100.0, 5.0)),
-        Ai::default(),
-        Collider::circle(5.0),
-        Health {
-            owner: 1,
-            max_health: 3,
-            health: 3,
-        },
-        LockedAxes::ROTATION_LOCKED,
-        MoveMotion::Bouncing {
-            speed: 10.0,
-            timer: Timer::from_seconds(0.6, TimerMode::Repeating),
-        },
-        Actions::default(),
-        Movement::default(),
-        StateScoped(GameState::Playing),
-    ));
 }
 
 fn ai_think(

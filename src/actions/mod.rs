@@ -232,7 +232,7 @@ fn hit_detection(
             Ok((target_transform, mut health)),
         ) = (damage_query.get(entity1), health_query.get_mut(entity2))
         {
-            if *target_owner == health.owner {
+            if *target_owner == health.owner && health.health > 0 {
                 health.health -= 1;
                 let delta = target_transform.translation - damage_source_transform.translation;
                 let delta = delta.truncate().normalize_or_zero();
