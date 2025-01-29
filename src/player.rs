@@ -14,6 +14,7 @@ pub struct PlayerPlugin;
 #[require(RigidBody)]
 pub struct Player {
     pub form: PlayerForm,
+    pub score: u32,
 }
 
 #[derive(Default)]

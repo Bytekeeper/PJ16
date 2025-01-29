@@ -14,14 +14,14 @@ pub struct EnemiesPlugin;
 
 #[derive(Component, Default)]
 pub struct Ai {
-    //pub form: EnemyForm,
+    pub form: EnemyForm,
 }
 
-//#[derive(Default)]
-//pub enum EnemyForm {
-//    #[default]
-//    Melee,
-//}
+#[derive(Default)]
+pub enum EnemyForm {
+    #[default]
+    Melee,
+}
 
 impl Plugin for EnemiesPlugin {
     fn build(&self, app: &mut App) {
@@ -48,8 +48,8 @@ fn enemy_spawner(
     enemy_1_counter.0 += rng.gen::<f32>() * time.delta_secs();
 
     if enemy_1_counter.0 > enemy_1_counter.1 {
-        enemy_1_counter.1 += 1.0;
-        enemy_1_counter.0 -= 1.0;
+        enemy_1_counter.1 += 0.1;
+        enemy_1_counter.0 -= enemy_1_counter.0;
 
         commands.spawn((
             AseSpriteAnimation {
@@ -65,8 +65,8 @@ fn enemy_spawner(
             Collider::circle(5.0),
             Health {
                 owner: 1,
-                max_health: 2,
-                health: 2,
+                max_health: 1,
+                health: 1,
             },
             LockedAxes::ROTATION_LOCKED,
             MoveMotion::Bouncing {
@@ -81,17 +81,20 @@ fn enemy_spawner(
 }
 
 fn ai_think(
-    mut ai_query: Query<(&mut Movement, &mut Actions, &Transform), With<Ai>>,
+    mut ai_query: Query<(&mut Movement, &mut Actions, &Transform, &Ai)>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     let Ok(player_transform) = player_query.get_single() else {
         debug!("No player found");
         return;
     };
-    for (mut movement, mut actions, ai_transform) in ai_query.iter_mut() {
+    for (mut movement, mut actions, ai_transform, ai) in ai_query.iter_mut() {
         let actions = &mut *actions;
         let delta = (player_transform.translation - ai_transform.translation).truncate();
-        if delta.length() > 10.0 {
+        let range = match ai.form {
+            EnemyForm::Melee => 15.0,
+        };
+        if delta.length() > range {
             movement.move_direction = Some(delta.clamp_length_min(10.0));
         } else {
             movement.move_direction = None;
@@ -100,7 +103,7 @@ fn ai_think(
                 *actions = Actions::Executing {
                     trigger_direction: delta,
                     pending_cooldown: Timer::from_seconds(0.5, TimerMode::Once),
-                    steps: [Step::from_timer(Timer::from_seconds(0.8, TimerMode::Once))
+                    steps: [Step::from_timer(Timer::from_seconds(1.2, TimerMode::Once))
                         .with_effect(Effect::Splash)]
                     .into(),
                 };

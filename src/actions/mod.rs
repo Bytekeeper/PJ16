@@ -8,6 +8,7 @@ use bevy_kira_audio::prelude::*;
 use std::collections::VecDeque;
 
 use crate::loading::{AudioAssets, EffectAssets};
+use crate::player::Player;
 use crate::GameState;
 use game_control::{InputPlugin, InputSet};
 
@@ -101,6 +102,7 @@ pub struct Health {
 
 #[derive(Component)]
 pub struct Damage {
+    pub source_owner: u32,
     pub target_owner: u32,
 }
 
@@ -176,6 +178,7 @@ fn character_actions(
                             OneShot::Despawn,
                             Collider::circle(15.0),
                             Damage {
+                                source_owner: *owner,
                                 target_owner: 1 - *owner,
                             },
                             Sensor,
@@ -216,6 +219,7 @@ fn hit_detection(
     mut collision_event_reader: EventReader<Collision>,
     mut health_query: Query<(&Transform, &mut Health)>,
     damage_query: Query<(&Transform, &Damage)>,
+    mut player_query: Query<&mut Player>,
     mut commands: Commands,
 ) {
     for Collision(contacts) in collision_event_reader.read() {
@@ -228,7 +232,13 @@ fn hit_detection(
             std::mem::swap(&mut entity1, &mut entity2);
         }
         if let (
-            Ok((damage_source_transform, Damage { target_owner })),
+            Ok((
+                damage_source_transform,
+                Damage {
+                    target_owner,
+                    source_owner,
+                },
+            )),
             Ok((target_transform, mut health)),
         ) = (damage_query.get(entity1), health_query.get_mut(entity2))
         {
@@ -239,6 +249,9 @@ fn hit_detection(
                 let mut ec = commands.entity(entity2);
                 ec.insert(ExternalImpulse::new(delta * 1000.0));
                 if health.health == 0 {
+                    if *source_owner == 0 {
+                        player_query.single_mut().score += 1;
+                    }
                     ec.despawn();
                 }
                 commands.entity(entity1).remove::<Damage>();

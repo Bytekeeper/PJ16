@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_aseprite_ultra::prelude::*;
 
 use crate::actions::{Actions, Health};
-use crate::loading::TextureAssets;
+use crate::loading::{Fonts, TextureAssets};
 use crate::player::Player;
 use crate::GameState;
 
@@ -13,13 +13,19 @@ impl Plugin for UiPlugin {
         app.add_systems(Update, update_cooldown_displays)
             .add_systems(
                 Update,
-                update_health_display.run_if(in_state(GameState::Playing)),
+                (update_health_display, update_score_display).run_if(in_state(GameState::Playing)),
             );
     }
 }
 
 #[derive(Component)]
 pub struct CooldownDisplay(pub Entity);
+
+#[derive(Component)]
+pub struct ScoreDisplay;
+
+#[derive(Component)]
+pub struct HealthDisplay;
 
 fn update_cooldown_displays(
     mut display_query: Query<(Entity, &mut Text2d, &mut Visibility, &CooldownDisplay)>,
@@ -46,9 +52,6 @@ fn update_cooldown_displays(
     }
 }
 
-#[derive(Component)]
-pub struct HealthDisplay;
-
 fn update_health_display(
     mut commands: Commands,
     textures: Res<TextureAssets>,
@@ -61,7 +64,6 @@ fn update_health_display(
     let health_entity = health_query.get_single();
     let health_entity = if let Ok(health_entity) = health_entity {
         commands.entity(health_entity).despawn_descendants();
-        error!("GO");
         health_entity
     } else {
         commands
@@ -108,4 +110,40 @@ fn update_health_display(
             }
         }
     });
+}
+
+fn update_score_display(
+    mut commands: Commands,
+    fonts: Res<Fonts>,
+    player_query: Query<&Player, Changed<Player>>,
+    score_query: Query<Entity, With<ScoreDisplay>>,
+) {
+    let Ok(player) = player_query.get_single() else {
+        return;
+    };
+    let score_entity = score_query.get_single();
+    let mut ec = if let Ok(score_entity) = score_entity {
+        commands.entity(score_entity)
+    } else {
+        commands.spawn((
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(20.0),
+                left: Val::Percent(40.0),
+                width: Val::Percent(100.0),
+                height: Val::Px(64.0),
+                ..default()
+            },
+            StateScoped(GameState::Playing),
+            ScoreDisplay,
+        ))
+    };
+    ec.insert((
+        Text::new(player.score.to_string()),
+        TextFont {
+            font: fonts.font.clone(),
+            font_size: 48.0,
+            ..default()
+        },
+    ));
 }
