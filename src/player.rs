@@ -17,10 +17,11 @@ pub struct Player {
     pub score: u32,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub enum PlayerForm {
     #[default]
     Sword,
+    Bow,
 }
 
 #[derive(Component)]

@@ -1,5 +1,6 @@
 use avian2d::prelude::*;
 use bevy::prelude::*;
+use bevy_aseprite_ultra::prelude::*;
 use bevy_enoki::{
     prelude::{OneShot, ParticleEffectHandle},
     ParticleSpawner,
@@ -7,8 +8,8 @@ use bevy_enoki::{
 use bevy_kira_audio::prelude::*;
 use std::collections::VecDeque;
 
-use crate::loading::{AudioAssets, EffectAssets};
-use crate::player::Player;
+use crate::loading::{AudioAssets, EffectAssets, TextureAssets};
+use crate::player::{Player, PlayerForm};
 use crate::GameState;
 use game_control::{InputPlugin, InputSet};
 
@@ -51,6 +52,7 @@ pub enum Actions {
         // Each step will trigger something based on the weapon
         steps: VecDeque<Step>,
     },
+    ChangePlayerForm(PlayerForm),
 }
 
 pub struct Step {
@@ -141,8 +143,10 @@ fn character_movement(
 fn character_actions(
     time: Res<Time>,
     mut character_query: Query<(Entity, &Transform, &mut Actions, &Health)>,
+    mut player_query: Query<&mut Player>,
     audio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
+    textures: Res<TextureAssets>,
     effect_assets: Res<EffectAssets>,
     mut commands: Commands,
 ) {
@@ -151,6 +155,25 @@ fn character_actions(
     {
         let actions = &mut *actions;
         match actions {
+            Actions::ChangePlayerForm(next_player_form) => {
+                let mut ec = commands.entity(character_entity);
+                match next_player_form {
+                    PlayerForm::Sword => {
+                        ec.insert(AseSpriteAnimation {
+                            aseprite: textures.player_sword.clone(),
+                            animation: Animation::tag("flaming"),
+                        });
+                    }
+                    PlayerForm::Bow => {
+                        ec.insert(AseSpriteAnimation {
+                            aseprite: textures.player_bow.clone(),
+                            ..default()
+                        });
+                    }
+                }
+                player_query.single_mut().form = *next_player_form;
+                *actions = Actions::Idle;
+            }
             Actions::Cooldown(timer) => {
                 timer.tick(time.delta());
                 if timer.finished() {

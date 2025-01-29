@@ -103,6 +103,7 @@ fn keyboard_input(
                             steps,
                         };
                     }
+                    PlayerForm::Bow => todo!(),
                 }
             } else {
                 // No direction was selected, nothing will be done but no cool-down will be
@@ -110,6 +111,12 @@ fn keyboard_input(
                 *actions = Actions::Idle;
             }
             // Unless charging, stopping releasing the trigger will not do anything
+        } else if let Actions::Idle = actions {
+            if keyboard_input.pressed(KeyCode::Digit1) {
+                *actions = Actions::ChangePlayerForm(PlayerForm::Sword);
+            } else if keyboard_input.pressed(KeyCode::Digit2) {
+                *actions = Actions::ChangePlayerForm(PlayerForm::Bow);
+            }
         }
     } else {
         if matches!(actions, Actions::Idle) {

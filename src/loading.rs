@@ -44,6 +44,8 @@ pub struct TextureAssets {
     pub arrow: Handle<Image>,
     #[asset(path = "textures/player_sword.aseprite")]
     pub player_sword: Handle<Aseprite>,
+    #[asset(path = "textures/player_Bow.aseprite")]
+    pub player_bow: Handle<Aseprite>,
     //#[asset(path = "textures/Player_Mace_1.png")]
     //pub player_mace: Handle<Image>,
     //#[asset(path = "textures/Player_Spear_1.png")]

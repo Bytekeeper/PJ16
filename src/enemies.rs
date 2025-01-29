@@ -122,7 +122,9 @@ fn update_sprite(
         let (anim_handle, anim_name) = match actions {
             Actions::Idle => (&textures.enemy_1, "walk"),
             Actions::Executing { .. } => (&textures.enemy_1_attack, "attack"),
-            Actions::Cooldown(_) | Actions::Charging { .. } => continue,
+            Actions::ChangePlayerForm(_) | Actions::Cooldown(_) | Actions::Charging { .. } => {
+                continue
+            }
         };
         if animation.aseprite != *anim_handle {
             animation.aseprite = anim_handle.clone();
