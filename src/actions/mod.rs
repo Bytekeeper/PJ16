@@ -58,6 +58,7 @@ pub enum Actions {
 pub struct Step {
     pub timer: Timer,
     pub effect: Effect,
+    pub sfx: Option<Handle<AudioSource>>,
     pub forward: f32,
 }
 
@@ -73,6 +74,7 @@ impl Step {
             timer,
             forward: 0.0,
             effect: Effect::None,
+            sfx: default(),
         }
     }
 
@@ -82,6 +84,13 @@ impl Step {
 
     pub fn with_forward(self, forward: f32) -> Self {
         Self { forward, ..self }
+    }
+
+    pub fn with_sfx(self, sfx: Handle<AudioSource>) -> Self {
+        Self {
+            sfx: Some(sfx),
+            ..self
+        }
     }
 }
 
@@ -151,7 +160,6 @@ fn character_actions(
     mut character_query: Query<(Entity, &Transform, &mut Actions, &Health)>,
     mut player_query: Query<&mut Player>,
     audio: Res<Audio>,
-    audio_assets: Res<AudioAssets>,
     textures: Res<TextureAssets>,
     effect_assets: Res<EffectAssets>,
     mut commands: Commands,
@@ -201,7 +209,7 @@ fn character_actions(
                         let mut transform = *character_transform;
                         transform.translation += Vec3::Z;
                         transform.rotation =
-                            Quat::from_rotation_arc_2d(Vec2::Y, *trigger_direction);
+                            Quat::from_rotation_arc_2d(Vec2::X, *trigger_direction);
                         let mut ec = commands.spawn((
                             transform,
                             OneShot::Despawn,
@@ -218,18 +226,17 @@ fn character_actions(
                                     ParticleSpawner::default(),
                                     ParticleEffectHandle(effect_assets.sword_slash.clone()),
                                 ));
-                                audio.play(audio_assets.woosh.clone()).with_volume(0.3);
                             }
                             Effect::Splash => {
                                 ec.insert((
                                     ParticleSpawner::default(),
                                     ParticleEffectHandle(effect_assets.enemy_1_attack.clone()),
                                 ));
-                                audio
-                                    .play(audio_assets.enemy_1_attack.clone())
-                                    .with_volume(0.3);
                             }
                             Effect::None => (),
+                        }
+                        if let Some(sfx) = item.sfx {
+                            audio.play(sfx.clone()).with_volume(0.3);
                         }
 
                         if item.forward != 0.0 {

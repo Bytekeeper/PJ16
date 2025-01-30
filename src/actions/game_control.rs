@@ -3,7 +3,9 @@ use bevy::prelude::*;
 use std::collections::VecDeque;
 
 use crate::actions::{Actions, Effect, Step};
+use crate::loading::AudioAssets;
 use crate::player::{Player, PlayerForm};
+use crate::GameState;
 
 pub const FOLLOW_EPSILON: f32 = 5.;
 
@@ -14,7 +16,12 @@ pub struct InputPlugin;
 
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, keyboard_input.in_set(InputSet));
+        app.add_systems(
+            Update,
+            keyboard_input
+                .in_set(InputSet)
+                .run_if(in_state(GameState::Playing)),
+        );
     }
 }
 
@@ -25,6 +32,7 @@ fn keyboard_input(
     touch_input: Res<Touches>,
     mut player: Query<(&mut Actions, &Transform, &Player)>,
     camera: Query<(&Camera, &GlobalTransform), With<Camera2d>>,
+    audio_assets: Res<AudioAssets>,
     time: Res<Time>,
 ) {
     let Ok((mut actions, player_transform, player)) = player.get_single_mut() else {
@@ -91,12 +99,14 @@ fn keyboard_input(
                             TimerMode::Once,
                         ))
                         .with_effect(Effect::Circle)
-                        .with_forward(20.0)]);
+                        .with_forward(20.0)
+                        .with_sfx(audio_assets.woosh.clone())]);
                         for _ in 0..charge.elapsed_secs() as u32 {
                             steps.push_back(
                                 Step::from_timer(Timer::from_seconds(0.2, TimerMode::Once))
                                     .with_effect(Effect::Circle)
-                                    .with_forward(20.0),
+                                    .with_forward(20.0)
+                                    .with_sfx(audio_assets.woosh.clone()),
                             );
                         }
                         *actions = Actions::Executing {

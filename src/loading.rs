@@ -19,6 +19,7 @@ impl Plugin for LoadingPlugin {
                 .continue_to_state(GameState::Menu)
                 .load_collection::<AudioAssets>()
                 .load_collection::<TextureAssets>()
+                .load_collection::<RangedEnemyAssets>()
                 .load_collection::<EffectAssets>()
                 .load_collection::<TileMapAssets>()
                 .load_collection::<Fonts>(),
@@ -37,8 +38,6 @@ pub struct AudioAssets {
     pub enemy_1_attack: Handle<AudioSource>,
     #[asset(path = "audio/Player_Damaged_Effected.mp3")]
     pub player_damaged_effected: Handle<AudioSource>,
-    #[asset(path = "audio/Ranged_Enemy_Attack.mp3")]
-    pub ranged_enemy_attack: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -71,6 +70,20 @@ pub struct TextureAssets {
     pub player_life: Handle<Aseprite>,
     #[asset(path = "textures/title.png")]
     pub title: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct RangedEnemyAssets {
+    #[asset(path = "textures/Enemy_Ranged_1_Walk_Left.aseprite")]
+    pub walk_left: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Ranged_1_Walk_Right.aseprite")]
+    pub walk_right: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Ranged_1_Attack_Left.aseprite")]
+    pub attack_left: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Ranged_1_Attack_Right.aseprite")]
+    pub attack_right: Handle<Aseprite>,
+    #[asset(path = "audio/Ranged_Enemy_Attack.mp3")]
+    pub attack_sound: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection, Resource)]
