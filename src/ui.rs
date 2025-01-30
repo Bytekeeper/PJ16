@@ -58,10 +58,13 @@ fn update_health_display(
     player_query: Query<&Health, (Changed<Health>, With<Player>)>,
     health_query: Query<Entity, With<HealthDisplay>>,
 ) {
+    let health_entity = health_query.get_single();
     let Ok(player_health) = player_query.get_single() else {
+        if let Ok(health_entity) = health_entity {
+            commands.entity(health_entity).despawn_recursive();
+        }
         return;
     };
-    let health_entity = health_query.get_single();
     let health_entity = if let Ok(health_entity) = health_entity {
         commands.entity(health_entity).despawn_descendants();
         health_entity

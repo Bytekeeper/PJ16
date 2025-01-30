@@ -53,8 +53,8 @@ fn enemy_spawner(
 
         commands.spawn((
             AseSpriteAnimation {
-                aseprite: textures.enemy_1.clone(),
-                animation: Animation::tag("walk"),
+                aseprite: textures.enemy_1_left.clone(),
+                animation: Animation::default(),
             },
             Transform::from_translation(vec3(
                 rng.gen_range(-200.0..200.0),
@@ -115,22 +115,48 @@ fn ai_think(
 
 /// Update the enemy sprite animation based on the action it performs
 fn update_sprite(
-    mut animation_query: Query<(&mut AseSpriteAnimation, &Actions), With<Ai>>,
+    mut animation_query: Query<
+        (
+            &mut AseSpriteAnimation,
+            &mut AnimationState,
+            &Actions,
+            &Movement,
+        ),
+        With<Ai>,
+    >,
     textures: Res<TextureAssets>,
 ) {
-    for (mut animation, actions) in animation_query.iter_mut() {
+    for (mut animation, mut animation_state, actions, movement) in animation_query.iter_mut() {
         let (anim_handle, anim_name) = match actions {
-            Actions::Idle => (&textures.enemy_1, "walk"),
-            Actions::Executing { .. } => (&textures.enemy_1_attack, "attack"),
+            Actions::Idle => (
+                if movement.move_direction.is_some_and(|dir| dir.x <= 0.0) {
+                    &textures.enemy_1_left
+                } else {
+                    &textures.enemy_1_right
+                },
+                Animation::default(),
+            ),
+            Actions::Executing {
+                trigger_direction, ..
+            } => (
+                if trigger_direction.x <= 0.0 {
+                    &textures.enemy_1_attack_left
+                } else {
+                    &textures.enemy_1_attack_right
+                },
+                Animation::default(),
+            ),
             Actions::ChangePlayerForm(_) | Actions::Cooldown(_) | Actions::Charging { .. } => {
                 continue
             }
         };
         if animation.aseprite != *anim_handle {
             animation.aseprite = anim_handle.clone();
+            *animation_state = AnimationState::default();
         }
-        if animation.animation.tag.as_deref() != Some(anim_name) {
-            animation.animation = Animation::tag(anim_name);
+        if animation.animation.tag != anim_name.tag {
+            animation.animation = anim_name;
+            *animation_state = AnimationState::default();
         }
     }
 }

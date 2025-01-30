@@ -17,9 +17,6 @@ impl Plugin for LoadingPlugin {
         app.add_loading_state(
             LoadingState::new(GameState::Loading)
                 .continue_to_state(GameState::Menu)
-                .with_dynamic_assets_file::<StandardDynamicAssetCollection>(
-                    "dynamic_asset.assets.ron",
-                )
                 .load_collection::<AudioAssets>()
                 .load_collection::<TextureAssets>()
                 .load_collection::<EffectAssets>()
@@ -36,6 +33,12 @@ impl Plugin for LoadingPlugin {
 pub struct AudioAssets {
     #[asset(path = "audio/woosh.ogg")]
     pub woosh: Handle<AudioSource>,
+    #[asset(path = "audio/Melee_Enemy_Attack.mp3")]
+    pub enemy_1_attack: Handle<AudioSource>,
+    #[asset(path = "audio/Player_Damaged_Effected.mp3")]
+    pub player_damaged_effected: Handle<AudioSource>,
+    #[asset(path = "audio/Ranged_Enemy_Attack.mp3")]
+    pub ranged_enemy_attack: Handle<AudioSource>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -52,10 +55,14 @@ pub struct TextureAssets {
     //pub player_spear: Handle<Image>,
     //#[asset(path = "textures/player_Bow.png")]
     //pub player_bow: Handle<Image>,
-    #[asset(path = "textures/Melee_Enemy_1.aseprite")]
-    pub enemy_1: Handle<Aseprite>,
-    #[asset(path = "textures/Melee_Enemy_1_Attack.aseprite")]
-    pub enemy_1_attack: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Melee_1_Walk_Left.aseprite")]
+    pub enemy_1_left: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Melee_1_Walk_Right.aseprite")]
+    pub enemy_1_right: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Melee_1_Attack_Left.aseprite")]
+    pub enemy_1_attack_left: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Melee_1_Attack_Right.aseprite")]
+    pub enemy_1_attack_right: Handle<Aseprite>,
     //#[asset(path = "textures/Melee_Enemy_2.aseprite")]
     //pub enemy_2: Handle<Aseprite>,
     //#[asset(path = "textures/Melee_Enemy_3.aseprite")]

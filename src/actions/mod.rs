@@ -58,6 +58,7 @@ pub enum Actions {
 pub struct Step {
     pub timer: Timer,
     pub effect: Effect,
+    pub forward: f32,
 }
 
 pub enum Effect {
@@ -70,12 +71,17 @@ impl Step {
     pub fn from_timer(timer: Timer) -> Self {
         Self {
             timer,
+            forward: 0.0,
             effect: Effect::None,
         }
     }
 
     pub fn with_effect(self, effect: Effect) -> Self {
         Self { effect, ..self }
+    }
+
+    pub fn with_forward(self, forward: f32) -> Self {
+        Self { forward, ..self }
     }
 }
 
@@ -212,22 +218,27 @@ fn character_actions(
                                     ParticleSpawner::default(),
                                     ParticleEffectHandle(effect_assets.sword_slash.clone()),
                                 ));
+                                audio.play(audio_assets.woosh.clone()).with_volume(0.3);
                             }
                             Effect::Splash => {
                                 ec.insert((
                                     ParticleSpawner::default(),
                                     ParticleEffectHandle(effect_assets.enemy_1_attack.clone()),
                                 ));
+                                audio
+                                    .play(audio_assets.enemy_1_attack.clone())
+                                    .with_volume(0.3);
                             }
                             Effect::None => (),
                         }
 
-                        audio.play(audio_assets.woosh.clone()).with_volume(0.3);
-
-                        let character_direction = trigger_direction.normalize_or_zero() * 20000.0;
-                        commands
-                            .entity(character_entity)
-                            .insert(ExternalImpulse::new(character_direction));
+                        if item.forward != 0.0 {
+                            let character_direction =
+                                trigger_direction.normalize_or_zero() * item.forward * 1000.0;
+                            commands
+                                .entity(character_entity)
+                                .insert(ExternalImpulse::new(character_direction));
+                        }
                     }
                 } else {
                     *actions = Actions::Cooldown(pending_cooldown.clone());
@@ -243,6 +254,8 @@ fn hit_detection(
     mut health_query: Query<(&Transform, &mut Health)>,
     damage_query: Query<(&Transform, &Damage)>,
     mut player_query: Query<&mut Player>,
+    audio: Res<Audio>,
+    audio_assets: Res<AudioAssets>,
     mut commands: Commands,
 ) {
     for Collision(contacts) in collision_event_reader.read() {
@@ -274,6 +287,11 @@ fn hit_detection(
                 if health.health == 0 {
                     if *source_owner == 0 {
                         player_query.single_mut().score += 1;
+                    }
+                    if *target_owner == 0 {
+                        audio
+                            .play(audio_assets.player_damaged_effected.clone())
+                            .with_volume(0.3);
                     }
                     ec.despawn();
                 }

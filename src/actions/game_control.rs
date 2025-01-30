@@ -90,11 +90,13 @@ fn keyboard_input(
                             0.0,
                             TimerMode::Once,
                         ))
-                        .with_effect(Effect::Circle)]);
+                        .with_effect(Effect::Circle)
+                        .with_forward(20.0)]);
                         for _ in 0..charge.elapsed_secs() as u32 {
                             steps.push_back(
                                 Step::from_timer(Timer::from_seconds(0.2, TimerMode::Once))
-                                    .with_effect(Effect::Circle),
+                                    .with_effect(Effect::Circle)
+                                    .with_forward(20.0),
                             );
                         }
                         *actions = Actions::Executing {
