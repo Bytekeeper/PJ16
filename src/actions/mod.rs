@@ -8,7 +8,8 @@ use bevy_enoki::{
 use bevy_kira_audio::prelude::*;
 use std::collections::VecDeque;
 
-use crate::loading::{AudioAssets, EffectAssets, TextureAssets};
+use crate::enemies::{Ai, EnemyForm};
+use crate::loading::{AudioAssets, EffectAssets, RangedEnemyAssets, TextureAssets};
 use crate::player::{Player, PlayerForm};
 use crate::GameState;
 use game_control::{InputPlugin, InputSet};
@@ -23,7 +24,12 @@ impl Plugin for ActionsPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (character_actions, character_movement, hit_detection)
+            (
+                character_actions,
+                character_movement,
+                despawn_dead,
+                hit_detection,
+            )
                 .chain()
                 .after(InputSet)
                 .run_if(in_state(GameState::Playing)),
@@ -31,6 +37,9 @@ impl Plugin for ActionsPlugin {
         .add_plugins(InputPlugin);
     }
 }
+
+#[derive(Component, Deref, DerefMut)]
+pub struct Dying(pub Timer);
 
 #[derive(Default, Component)]
 pub struct Movement {
@@ -208,8 +217,7 @@ fn character_actions(
 
                         let mut transform = *character_transform;
                         transform.translation += Vec3::Z;
-                        transform.rotation =
-                            Quat::from_rotation_arc_2d(Vec2::X, *trigger_direction);
+                        transform.rotation = Quat::from_rotation_z(trigger_direction.to_angle());
                         let mut ec = commands.spawn((
                             transform,
                             OneShot::Despawn,
@@ -236,7 +244,7 @@ fn character_actions(
                             Effect::None => (),
                         }
                         if let Some(sfx) = item.sfx {
-                            audio.play(sfx.clone()).with_volume(0.3);
+                            audio.play(sfx.clone()).with_volume(0.2);
                         }
 
                         if item.forward != 0.0 {
@@ -261,9 +269,12 @@ fn hit_detection(
     mut health_query: Query<(&Transform, &mut Health)>,
     damage_query: Query<(&Transform, &Damage)>,
     mut player_query: Query<&mut Player>,
+    ai_query: Query<&Ai>,
     audio: Res<Audio>,
     audio_assets: Res<AudioAssets>,
     mut commands: Commands,
+    textures: Res<TextureAssets>,
+    ranged_enemy_assets: Res<RangedEnemyAssets>,
 ) {
     for Collision(contacts) in collision_event_reader.read() {
         let Contacts {
@@ -300,10 +311,43 @@ fn hit_detection(
                             .play(audio_assets.player_damaged_effected.clone())
                             .with_volume(0.3);
                     }
-                    ec.despawn();
+                    ec.insert(Dying(Timer::from_seconds(1.0, TimerMode::Once)));
+                    ec.remove::<(Ai, Health)>();
+
+                    if let Ok(ai) = ai_query.get(entity2) {
+                        let animation = Animation::default().with_repeat(0.into());
+                        match ai.form {
+                            EnemyForm::Melee => {
+                                ec.insert(AseSpriteAnimation {
+                                    aseprite: textures.enemy_1_death.clone(),
+                                    animation,
+                                });
+                            }
+                            EnemyForm::Ranged => {
+                                ec.insert(AseSpriteAnimation {
+                                    aseprite: ranged_enemy_assets.death.clone(),
+                                    animation,
+                                });
+                            }
+                        }
+                        ec.insert(AnimationState::default());
+                    }
                 }
                 commands.entity(entity1).remove::<Damage>();
             }
+        }
+    }
+}
+
+fn despawn_dead(
+    mut commands: Commands,
+    mut dead_query: Query<(Entity, &mut Dying)>,
+    time: Res<Time>,
+) {
+    for (entity, mut dying) in dead_query.iter_mut() {
+        dying.tick(time.delta());
+        if dying.finished() {
+            commands.entity(entity).despawn();
         }
     }
 }

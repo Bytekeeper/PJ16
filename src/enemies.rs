@@ -77,7 +77,7 @@ fn enemy_ranged_spawner(
                 health: 1,
             },
             LockedAxes::ROTATION_LOCKED,
-            MoveMotion::Sliding { speed: 15.0 },
+            MoveMotion::Sliding { speed: 10.0 },
             Actions::default(),
             Movement::default(),
             StateScoped(GameState::Playing),

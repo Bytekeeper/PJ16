@@ -60,6 +60,8 @@ pub struct TextureAssets {
     pub enemy_1_right: Handle<Aseprite>,
     #[asset(path = "textures/Enemy_Melee_1_Attack_Left.aseprite")]
     pub enemy_1_attack_left: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Melee_1_Death_Left.aseprite")]
+    pub enemy_1_death: Handle<Aseprite>,
     #[asset(path = "textures/Enemy_Melee_1_Attack_Right.aseprite")]
     pub enemy_1_attack_right: Handle<Aseprite>,
     //#[asset(path = "textures/Melee_Enemy_2.aseprite")]
@@ -82,6 +84,8 @@ pub struct RangedEnemyAssets {
     pub attack_left: Handle<Aseprite>,
     #[asset(path = "textures/Enemy_Ranged_1_Attack_Right.aseprite")]
     pub attack_right: Handle<Aseprite>,
+    #[asset(path = "textures/Enemy_Ranged_1_Death_Right.aseprite")]
+    pub death: Handle<Aseprite>,
     #[asset(path = "audio/Ranged_Enemy_Attack.mp3")]
     pub attack_sound: Handle<AudioSource>,
 }
