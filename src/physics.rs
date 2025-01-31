@@ -5,8 +5,9 @@ use bevy::prelude::*;
 pub enum CollisionLayer {
     #[default]
     Default,
-    //Player,
-    //Enemy,
+    Player,
+    Enemy,
+    EnemyProjectile,
     //Item,
     //Ground,
 }

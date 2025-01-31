@@ -10,6 +10,7 @@ use std::collections::VecDeque;
 
 use crate::enemies::{Ai, EnemyForm};
 use crate::loading::{AudioAssets, EffectAssets, RangedEnemyAssets, TextureAssets};
+use crate::physics::CollisionLayer;
 use crate::player::{Player, PlayerForm};
 use crate::GameState;
 use game_control::{InputPlugin, InputSet};
@@ -75,6 +76,11 @@ pub enum Effect {
     None,
     Circle,
     Splash,
+    Spawn(Spawn),
+}
+
+pub enum Spawn {
+    Arrow,
 }
 
 impl Step {
@@ -170,6 +176,7 @@ fn character_actions(
     mut player_query: Query<&mut Player>,
     audio: Res<Audio>,
     textures: Res<TextureAssets>,
+    ranged_enemy_assets: Res<RangedEnemyAssets>,
     effect_assets: Res<EffectAssets>,
     mut commands: Commands,
 ) {
@@ -239,6 +246,26 @@ fn character_actions(
                                 ec.insert((
                                     ParticleSpawner::default(),
                                     ParticleEffectHandle(effect_assets.enemy_1_attack.clone()),
+                                ));
+                            }
+                            Effect::Spawn(Spawn::Arrow) => {
+                                commands.spawn((
+                                    AseSpriteAnimation {
+                                        aseprite: ranged_enemy_assets.projectile.clone(),
+                                        animation: default(),
+                                    },
+                                    transform,
+                                    LinearVelocity(
+                                        trigger_direction.clamp_length(100000.0, 100000.0),
+                                    ),
+                                    Collider::circle(2.0),
+                                    Dying(Timer::from_seconds(0.7, TimerMode::Once)),
+                                    CollisionLayers::new(
+                                        CollisionLayer::EnemyProjectile,
+                                        LayerMask::NONE,
+                                        //[CollisionLayer::Default, CollisionLayer::Player],
+                                    ),
+                                    StateScoped(GameState::Playing),
                                 ));
                             }
                             Effect::None => (),

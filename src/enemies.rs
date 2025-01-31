@@ -1,9 +1,10 @@
-use crate::actions::{Actions, Effect, Health, MoveMotion, Movement, Step};
+use crate::actions::{Actions, Effect, Health, MoveMotion, Movement, Spawn, Step};
 use crate::loading::{AudioAssets, RangedEnemyAssets, TextureAssets};
 use crate::player::Player;
 use crate::GameState;
 
-use avian2d::prelude::{Collider, LockedAxes};
+use crate::physics::CollisionLayer;
+use avian2d::prelude::{Collider, CollisionLayers, LockedAxes};
 use bevy::math::vec3;
 use bevy::prelude::*;
 use bevy_aseprite_ultra::prelude::*;
@@ -39,6 +40,13 @@ impl Plugin for EnemiesPlugin {
     }
 }
 
+fn enemy_layer() -> CollisionLayers {
+    CollisionLayers::new(
+        CollisionLayer::Enemy,
+        [CollisionLayer::Default, CollisionLayer::Player],
+    )
+}
+
 fn enemy_ranged_spawner(
     mut commands: Commands,
     mut rng: GlobalEntropy<WyRand>,
@@ -46,7 +54,6 @@ fn enemy_ranged_spawner(
     ranged_enemy_assets: Res<RangedEnemyAssets>,
     time: Res<Time>,
 ) {
-    // Initialize counter
     if enemy_counter.1 == 0.0 {
         enemy_counter.1 = 3.0;
     }
@@ -62,6 +69,7 @@ fn enemy_ranged_spawner(
                 aseprite: ranged_enemy_assets.walk_left.clone(),
                 animation: Animation::default(),
             },
+            enemy_layer(),
             Transform::from_translation(vec3(
                 rng.gen_range(-200.0..200.0),
                 rng.gen_range(-200.0..200.0),
@@ -103,6 +111,7 @@ fn enemy_melee_spawner(
                 aseprite: textures.enemy_1_left.clone(),
                 animation: Animation::default(),
             },
+            enemy_layer(),
             Transform::from_translation(vec3(
                 rng.gen_range(-200.0..200.0),
                 rng.gen_range(-200.0..200.0),
@@ -162,7 +171,7 @@ fn ai_think(
                         trigger_direction: delta,
                         pending_cooldown: Timer::from_seconds(0.8, TimerMode::Once),
                         steps: [Step::from_timer(Timer::from_seconds(1.3, TimerMode::Once))
-                            .with_effect(Effect::Splash)
+                            .with_effect(Effect::Spawn(Spawn::Arrow))
                             .with_sfx(ranged_enemy_assets.attack_sound.clone())]
                         .into(),
                     },

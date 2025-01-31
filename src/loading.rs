@@ -86,6 +86,8 @@ pub struct RangedEnemyAssets {
     pub attack_right: Handle<Aseprite>,
     #[asset(path = "textures/Enemy_Ranged_1_Death_Right.aseprite")]
     pub death: Handle<Aseprite>,
+    #[asset(path = "textures/Ranged_Enemy_Projectile.aseprite")]
+    pub projectile: Handle<Aseprite>,
     #[asset(path = "audio/Ranged_Enemy_Attack.mp3")]
     pub attack_sound: Handle<AudioSource>,
 }

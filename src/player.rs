@@ -5,6 +5,7 @@ use bevy_aseprite_ultra::prelude::*;
 
 use crate::actions::{Actions, Health};
 use crate::loading::{Fonts, TextureAssets};
+use crate::physics::CollisionLayer;
 use crate::ui::CooldownDisplay;
 use crate::GameState;
 
@@ -48,6 +49,14 @@ fn spawn_player(mut commands: Commands, textures: Res<TextureAssets>, fonts: Res
             },
             Transform::from_translation(Vec3::new(0., 0., 2.)),
             Collider::circle(5.0),
+            CollisionLayers::new(
+                CollisionLayer::Player,
+                [
+                    CollisionLayer::Default,
+                    CollisionLayer::Enemy,
+                    CollisionLayer::EnemyProjectile,
+                ],
+            ),
             LockedAxes::ROTATION_LOCKED,
             LinearDamping(10.0),
             Player::default(),
